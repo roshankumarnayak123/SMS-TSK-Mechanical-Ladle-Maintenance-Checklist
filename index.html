@@ -483,7 +483,6 @@ select.cl-input option{background:var(--steel-mid);color:#fff;}
 </head>
 <body>
 
-<!-- ══ CLOUD BLOCKED OVERLAY ════════════════════════════════════ -->
 <div id="cloud-block-overlay" class="hidden">
   <div class="cbo-box">
     <div class="cbo-icon"><i class="ti ti-cloud-off"></i></div>
@@ -506,10 +505,8 @@ select.cl-input option{background:var(--steel-mid);color:#fff;}
   </div>
 </div>
 
-<!-- Background particles -->
 <div class="bg-particles" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
 
-<!-- ══ LOGIN SCREEN ══════════════════════════════════════════════ -->
 <div id="login-screen">
   <div class="login-topbar">
     <div class="login-topbar-brand">SMS TSK <span style="color:var(--accent);margin-left:5px;">v4.0</span></div>
@@ -577,7 +574,6 @@ select.cl-input option{background:var(--steel-mid);color:#fff;}
   </div>
 </div>
 
-<!-- ══ ADD USER MODAL ══════════════════════════════════════════ -->
 <div id="modal-adduser" class="modal-overlay hidden">
   <div class="modal">
     <h3>Create user account</h3>
@@ -602,7 +598,6 @@ select.cl-input option{background:var(--steel-mid);color:#fff;}
   </div>
 </div>
 
-<!-- ══ JOB DETAILS MODAL ═══════════════════════════════════════ -->
 <div id="modal-job-details" class="modal-overlay hidden">
   <div class="modal" style="max-width:800px;width:95%;max-height:90vh;overflow-y:auto;padding:1.5rem;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
@@ -616,7 +611,6 @@ select.cl-input option{background:var(--steel-mid);color:#fff;}
   </div>
 </div>
 
-<!-- ══ APP ════════════════════════════════════════════════════ -->
 <div id="app">
   <nav class="nav">
     <div class="nav-left">
@@ -638,7 +632,6 @@ select.cl-input option{background:var(--steel-mid);color:#fff;}
     <div class="nav-right">
       <div class="live-clock"><i class="ti ti-clock" style="color:var(--accent);font-size:14px;"></i><span id="live-clock-text">--:--:--</span></div>
 
-      <!-- SESSION TIMER CHIP -->
       <div class="session-chip" id="session-chip" data-login="" title="Session duration">
         <i class="ti ti-hourglass"></i>
         <div class="session-chip-inner">
@@ -672,7 +665,6 @@ select.cl-input option{background:var(--steel-mid);color:#fff;}
     </div>
   </div>
 
-  <!-- Create Job -->
   <div id="page-create" class="page active">
     <div class="phase-steps">
       <div class="phase-step ps-active"><div class="phase-step-num">1</div><span>Create Job (Area)</span></div>
@@ -718,7 +710,6 @@ select.cl-input option{background:var(--steel-mid);color:#fff;}
     </div>
   </div>
 
-  <!-- Active Ladles -->
   <div id="page-udash" class="page">
     <div class="page-header">
       <div><h1>Active Ladles</h1><p>Ongoing maintenance jobs pending completion</p></div>
@@ -726,7 +717,6 @@ select.cl-input option{background:var(--steel-mid);color:#fff;}
     <div id="udash-content"></div>
   </div>
 
-  <!-- Workspace -->
   <div id="page-workspace" class="page">
     <div class="phase-steps" id="ws-phase-steps">
       <div class="phase-step ps-done" id="ps1"><div class="phase-step-num"><i class="ti ti-check"></i></div><span>Created</span></div>
@@ -784,7 +774,6 @@ select.cl-input option{background:var(--steel-mid);color:#fff;}
         <button class="btn btn-ghost btn-sm" onclick="closeWorkspace()"><i class="ti ti-arrow-left"></i> Back</button>
       </div>
 
-      <!-- Step 3 completion summary (read-only checklist review for Area Maint) -->
       <div style="background:rgba(34,197,94,0.04);border:1px solid rgba(34,197,94,0.2);border-radius:var(--r-md);padding:14px 16px;margin-bottom:1.25rem;display:flex;align-items:center;gap:12px;">
         <div style="width:38px;height:38px;border-radius:50%;background:rgba(34,197,94,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
           <i class="ti ti-circle-check" style="font-size:22px;color:var(--success);"></i>
@@ -795,7 +784,6 @@ select.cl-input option{background:var(--steel-mid);color:#fff;}
         </div>
       </div>
 
-      <!-- Read-only checklist review -->
       <div style="margin-bottom:1.25rem;">
         <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted);margin-bottom:10px;display:flex;align-items:center;gap:8px;">
           <i class="ti ti-list-check" style="color:var(--accent);"></i> Completed Inspection Summary
@@ -827,13 +815,11 @@ select.cl-input option{background:var(--steel-mid);color:#fff;}
     </div>
   </div>
 
-  <!-- Dashboard -->
   <div id="page-dashboard" class="page">
     <div class="page-header"><div><h1>Dashboard</h1></div></div>
     <div class="dash-grid" id="dash-kpi"></div>
   </div>
 
-  <!-- Data Log -->
   <div id="page-log" class="page">
     <div class="page-header"><div><h1>Data Log</h1></div></div>
     <div class="table-wrap">
@@ -844,7 +830,6 @@ select.cl-input option{background:var(--steel-mid);color:#fff;}
     </div>
   </div>
 
-  <!-- Users -->
   <div id="page-users" class="page">
     <div class="page-header">
       <div><h1>Users</h1></div>
@@ -858,7 +843,6 @@ select.cl-input option{background:var(--steel-mid);color:#fff;}
     </div>
   </div>
 
-  <!-- Login History -->
   <div id="page-logins" class="page">
     <div class="page-header"><div><h1>Login History</h1><p>Recent user authentications</p></div></div>
     <div class="table-wrap">
@@ -869,7 +853,6 @@ select.cl-input option{background:var(--steel-mid);color:#fff;}
     </div>
   </div>
 
-  <!-- Settings -->
   <div id="page-settings" class="page">
     <div class="page-header"><div><h1>System Settings</h1></div></div>
     <div class="dash-row" style="align-items:start;">
@@ -939,7 +922,7 @@ select.cl-input option{background:var(--steel-mid);color:#fff;}
               </div>
               <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-muted);margin-top:4px;">
                 <span id="storage-used-label">— KB used</span>
-                <span id="storage-total-label">Limit: 512 KB</span>
+                <span id="storage-total-label">Limit: 1 GB</span>
               </div>
             </div>
             <button class="btn btn-ghost btn-sm" style="margin-top:1rem;width:100%;justify-content:center;" onclick="renderStorageGraph()">
@@ -959,9 +942,7 @@ select.cl-input option{background:var(--steel-mid);color:#fff;}
 // ══════════════════════════════════════════════════════════════════
 // CONSTANTS & CONFIG
 // ══════════════════════════════════════════════════════════════════
-const JSONBIN_KEY    = '$2a$10$jfxumSJ0tPI6D4XwCxf8NOiAasinsdStDR5ZicIq0WXlipDEXHLPW';
-const JSONBIN_BIN    = '6a2c6fdbf5f4af5e29e8da68';
-const JSONBIN_URL    = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN}`;
+const FIREBASE_URL   = 'https://ladle-checklist-default-rtdb.firebaseio.com/data.json?auth=VIwSpsRDlMZNyHkwYncRA6b2WCd9ONVHZ2AB8IYL';
 const LOCAL_KEY      = 'lm_cloud_backup_v4';
 const MAX_LOGIN_LOG  = 100;
 const WIPE_MASTER_PW = '12345678';
@@ -1063,22 +1044,23 @@ setInterval(() => {
 async function cloudRead() {
   if (!_cloudSyncEnabled) return null;
   try {
-    const r = await fetch(`${JSONBIN_URL}/latest?_t=${Date.now()}`, {
-      headers:{'X-Master-Key':JSONBIN_KEY,'X-Bin-Meta':'false'},cache:'no-store'
-    });
+    const r = await fetch(`${FIREBASE_URL}&_t=${Date.now()}`, { cache: 'no-store' });
     if (!r.ok) return null;
     const data = await r.json();
-    return data?.record ?? data;
+    // Firebase returns null if the node doesn't exist yet
+    return data;
   } catch { return null; }
 }
 
 async function cloudWrite(data) {
   if (!_cloudSyncEnabled) return false;
   try {
-    const r = await fetch(`${JSONBIN_URL}?_t=${Date.now()}`, {
-      method:'PUT',
-      headers:{'Content-Type':'application/json','X-Master-Key':JSONBIN_KEY,'X-Bin-Versioning':'false'},
-      body:JSON.stringify(data),cache:'no-store'
+    // PUT overwrites the entire /data node
+    const r = await fetch(`${FIREBASE_URL}&_t=${Date.now()}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+      cache: 'no-store'
     });
     return r.ok;
   } catch { return false; }
@@ -2068,7 +2050,7 @@ async function promptWipeCloud() {
 // ══════════════════════════════════════════════════════════════════
 function renderStorageGraph() {
   if (!_cloudCache) return;
-  const LIMIT_KB   = 512;          // JSONBin free bin limit (512 KB)
+  const LIMIT_KB   = 1048576;      // Firebase free tier limit (~1 GB in KB)
   const dataStr    = JSON.stringify(_cloudCache);
   const usedBytes  = new Blob([dataStr]).size;
   const usedKB     = usedBytes / 1024;
