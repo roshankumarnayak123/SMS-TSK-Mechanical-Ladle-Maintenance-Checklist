@@ -1045,11 +1045,10 @@ async function cloudRead() {
   if (!_cloudSyncEnabled) return null;
   try {
     const r = await fetch(`${FIREBASE_URL}&_t=${Date.now()}`, { cache: 'no-store' });
-    if (!r.ok) return null;
+    if (!r.ok) return false; // Return 'false' for actual HTTP errors (401, 404, etc.)
     const data = await r.json();
-    // Firebase returns null if the node doesn't exist yet
-    return data;
-  } catch { return null; }
+    return data; // Let 'null' pass through (Firebase's response for an empty DB)
+  } catch { return false; } // Return 'false' for network/connection failures
 }
 
 async function cloudWrite(data) {
@@ -1069,8 +1068,16 @@ async function cloudWrite(data) {
 /** Debounced write — saves locally immediately, pushes to cloud after 1 s idle */
 function saveDB() {
   if (!_cloudCache) return;
-  localStorage.setItem(LOCAL_KEY, JSON.stringify(_cloudCache));
+  
+  // Wrap in try-catch to prevent 5MB browser limit from breaking cloud sync
+  try {
+    localStorage.setItem(LOCAL_KEY, JSON.stringify(_cloudCache));
+  } catch (e) {
+    console.warn("Local cache full. Proceeding with cloud sync only.");
+  }
+  
   if (!_cloudSyncEnabled) return;
+  
   clearTimeout(_saveDBTimer);
   showSyncStatus('syncing');
   _saveDBTimer = setTimeout(async () => {
@@ -1087,7 +1094,8 @@ function saveDB() {
 
 /** Normalise / migrate a raw DB record */
 function normaliseDB(data) {
-  if (!data?.lm_log_v2) {
+  // 1. If there is NO data at all (brand new Firebase DB), initialize defaults
+  if (!data) {
     return {
       lm_log_v2:   [],
       lm_users_v2: [{username:'admin',password:'admin',role:'admin',fullname:'Administrator'}],
@@ -1096,6 +1104,14 @@ function normaliseDB(data) {
       settings:    {maintenanceMode:false}
     };
   }
+  
+  // 2. Firebase strips empty arrays. If they are missing, safely put them back.
+  if (!data.lm_log_v2)    data.lm_log_v2 = [];
+  if (!data.lm_users_v2)  data.lm_users_v2 = [{username:'admin',password:'admin',role:'admin',fullname:'Administrator'}];
+  if (!data.loginHistory) data.loginHistory = [];
+  if (!data.settings)     data.settings = {maintenanceMode:false};
+
+  // 3. Handle Checklist normalisation
   if (!data.checklists) {
     data.checklists = JSON.parse(JSON.stringify(DEFAULT_CHECKLISTS));
   } else {
@@ -1109,8 +1125,7 @@ function normaliseDB(data) {
       });
     });
   }
-  if (!data.loginHistory) data.loginHistory = [];
-  if (!data.settings)     data.settings = {maintenanceMode:false};
+  
   return data;
 }
 
@@ -1157,10 +1172,10 @@ async function retryCloudNow() {
   showSyncStatus('syncing');
 
   const data = await cloudRead();
-  if (data) {
+  if (data !== false) {
     _cloudCache  = normaliseDB(data);
     _cloudOnline = true;
-    localStorage.setItem(LOCAL_KEY, JSON.stringify(_cloudCache));
+    try { localStorage.setItem(LOCAL_KEY, JSON.stringify(_cloudCache)); } catch(e) {}
     const sm = document.getElementById('set-maint');
     if (sm) sm.checked = _cloudCache.settings.maintenanceMode;
     setCloudBlocked(false);
@@ -1211,16 +1226,18 @@ async function initCloudSync() {
   showSyncStatus('syncing');
   const data = await cloudRead();
 
-  if (!data) {
-    // Cloud unreachable on boot — block login
+  // Explicitly check for 'false' (error) rather than falsy (which catches null)
+  if (data === false) {
     showSyncStatus('error');
     setCloudBlocked(true);
-    return; // login screen stays locked until retry succeeds
+    return; 
   }
 
   _cloudOnline = true;
-  _cloudCache  = normaliseDB(data);
-  localStorage.setItem(LOCAL_KEY, JSON.stringify(_cloudCache));
+  _cloudCache  = normaliseDB(data); // normaliseDB will safely turn 'null' into default JSON
+  
+  try { localStorage.setItem(LOCAL_KEY, JSON.stringify(_cloudCache)); } catch(e) {}
+  
   const sm = document.getElementById('set-maint');
   if (sm) sm.checked = _cloudCache.settings.maintenanceMode;
   showSyncStatus('online');
