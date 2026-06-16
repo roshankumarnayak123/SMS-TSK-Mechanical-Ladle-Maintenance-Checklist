@@ -100,15 +100,12 @@ body{font-family:var(--font);background:var(--steel);color:var(--text-primary);m
 .field{margin-bottom:1.15rem;position:relative;}
 .field label{display:block;font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.06em;}
 
-/* BUG FIX #3: icon is BEFORE input in DOM — use ~ (general sibling) not + (adjacent).
-   Also added :focus-within on .input-wrap for reliable colour change. */
 .input-wrap{position:relative;display:block;}
 .input-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:18px;pointer-events:none;transition:color 0.2s;z-index:2;}
 .input-wrap input,.input-wrap select{width:100%;padding:13px 14px 13px 42px;background:rgba(255,255,255,0.04);border:1.5px solid var(--border-mid);border-radius:var(--r-sm);color:var(--text-primary);font-family:var(--font);font-size:14px;outline:none;transition:all 0.2s;}
 .input-wrap select{cursor:pointer;appearance:none;-webkit-appearance:none;}
 .input-wrap select option{background:var(--steel-mid);}
 
-/* FIX: use :focus-within on wrapper so icon colour changes regardless of DOM order */
 .theme-area .input-wrap:focus-within{border-radius:var(--r-sm);}
 .theme-area .input-wrap:focus-within .input-icon{color:var(--blue-light);}
 .theme-area .input-wrap input:focus{border-color:var(--blue);background:rgba(255,255,255,0.08);box-shadow:0 0 0 3px rgba(59,130,246,0.15);}
@@ -1054,9 +1051,10 @@ async function cloudRead() {
 async function cloudWrite(data) {
   if (!_cloudSyncEnabled) return false;
   try {
-    // PUT overwrites the entire /data node
+    // FIX: Using PATCH instead of PUT. 
+    // This merges updates at the top level rather than deleting missing keys.
     const r = await fetch(`${FIREBASE_URL}?_t=${Date.now()}`, {
-      method: 'PUT',
+      method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
       cache: 'no-store'
@@ -1226,15 +1224,35 @@ async function initCloudSync() {
   showSyncStatus('syncing');
   const data = await cloudRead();
 
-  // Explicitly check for 'false' (error) rather than falsy (which catches null)
+  // Explicitly check for 'false' (error) rather than falsy
   if (data === false) {
+    // FIX: Attempt to load from local backup instead of outright failing
+    const localData = localStorage.getItem(LOCAL_KEY);
+    if (localData) {
+      try {
+        _cloudCache = JSON.parse(localData);
+        _cloudOnline = false; // We are offline, but have local data
+        showSyncStatus('offline');
+        setCloudBlocked(false);
+        showToast('Offline mode active. Using local data.', 'info');
+        
+        // Restore maintenance toggle state from local cache
+        const sm = document.getElementById('set-maint');
+        if (sm) sm.checked = _cloudCache.settings?.maintenanceMode || false;
+        return;
+      } catch (e) {
+        console.error("Failed to parse local backup", e);
+      }
+    }
+    
+    // Only block if there is NO cloud connection AND NO local backup
     showSyncStatus('error');
     setCloudBlocked(true);
     return; 
   }
 
   _cloudOnline = true;
-  _cloudCache  = normaliseDB(data); // normaliseDB will safely turn 'null' into default JSON
+  _cloudCache  = normaliseDB(data);
   
   try { localStorage.setItem(LOCAL_KEY, JSON.stringify(_cloudCache)); } catch(e) {}
   
@@ -1420,21 +1438,28 @@ function stopSessionTimer() {
 }
 
 function logout() {
-  // Record session duration in loginHistory for the current session
-  if (_cloudCache && _loginTime) {
-    const last = _cloudCache.loginHistory.find(x => x.status === 'Success' && x.sessionDur === null);
-    if (last) {
-      const ms = Date.now() - new Date(last.loginTs).getTime();
+  // FIX: Tie session duration explicitly to the current user and login time
+  if (_cloudCache && _loginTime && currentUser) {
+    const currentSession = _cloudCache.loginHistory.find(x => 
+      x.user === currentUser && 
+      x.status === 'Success' && 
+      x.sessionDur === null &&
+      new Date(x.loginTs).getTime() === _loginTime.getTime()
+    );
+    
+    if (currentSession) {
+      const ms = Date.now() - _loginTime.getTime();
       const totalSec = Math.floor(ms / 1000);
       const h = Math.floor(totalSec / 3600);
       const m = Math.floor((totalSec % 3600) / 60);
       const s = totalSec % 60;
-      last.sessionDur = h > 0
+      currentSession.sessionDur = h > 0
         ? `${String(h).padStart(2,'0')}h ${String(m).padStart(2,'0')}m ${String(s).padStart(2,'0')}s`
         : `${String(m).padStart(2,'0')}m ${String(s).padStart(2,'0')}s`;
       saveDB();
     }
   }
+  
   document.getElementById('login-screen').classList.remove('hidden');
   document.getElementById('app').style.display = 'none';
   document.getElementById('pw').value = '';
@@ -1461,7 +1486,10 @@ function createUser() {
     err.textContent = 'Fill all fields (Password min 6 chars).';
     err.style.display = 'block'; return;
   }
-  const users = getUsers();
+  
+  // FIX: Prevent state mutation by creating a shallow copy of the users array
+  const users = [...getUsers()];
+  
   if (users.find(x => x.username === u)) {
     err.textContent = 'Username already taken.';
     err.style.display = 'block'; return;
