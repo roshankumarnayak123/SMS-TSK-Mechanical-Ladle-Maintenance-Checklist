@@ -701,6 +701,14 @@ select.cl-input option{background:var(--steel-mid);color:#fff;}
       </div>
     </div>
 
+    <div id="create-checklist-wrap" style="display:none;margin-top:1.25rem;">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted);margin-bottom:10px;display:flex;align-items:center;gap:8px;">
+        <i class="ti ti-clipboard-check" style="color:var(--accent);"></i> Create Job Checklist (Area Maint.)
+        <span style="flex:1;height:1px;background:var(--border);display:block;"></span>
+      </div>
+      <div id="create-cl-sections"></div>
+    </div>
+
     <div class="save-bar" style="display:none;" id="create-save">
       <div class="save-info">Issue this ladle to Central Mechanical Maintenance.</div>
       <button class="btn btn-blue" onclick="createJob()"><i class="ti ti-send"></i> Create &amp; Send to Central</button>
@@ -861,6 +869,7 @@ select.cl-input option{background:var(--steel-mid);color:#fff;}
             <select id="ce-type" onchange="renderChecklistEditor()">
               <option value="steel">Steel Ladle</option>
               <option value="hot">Hot Metal Ladle</option>
+              <option value="createJob">Create Job Checklist (Area)</option>
             </select>
           </div>
           <div id="ce-sections"></div>
@@ -978,6 +987,14 @@ const DEFAULT_CHECKLISTS = {
       {label:'Check trunnion ring welds',type:'text'},
       {label:'Inspect ladle bail',type:'text'}
     ]}
+  ],
+  createJob:[
+    {icon:'ti-clipboard-check',title:'Pre-issue checks (Area Maint.)',items:[
+      {label:'Visual condition of ladle before issue',type:'select',options:'Good,Fair,Poor'},
+      {label:'Confirm ladle number matches job card',type:'text'},
+      {label:'Any visible damage or leakage noted',type:'textarea'},
+      {label:'Safety guards / fittings in place',type:'select',options:'Yes,No,N/A'}
+    ]}
   ]
 };
 
@@ -1007,6 +1024,7 @@ let currentLadleType= '';
 let activeJobId     = null;
 let checkState      = {};
 let totalItems      = 0;
+let createCheckState = {};   // Feature: Create Job Checklist state (Area Maint, at job creation)
 
 // ══════════════════════════════════════════════════════════════════
 // UTILITIES
@@ -1113,7 +1131,7 @@ function normaliseDB(data) {
   if (!data.checklists) {
     data.checklists = JSON.parse(JSON.stringify(DEFAULT_CHECKLISTS));
   } else {
-    ['steel','hot'].forEach(type => {
+    ['steel','hot','createJob'].forEach(type => {
       if (!data.checklists[type]) return;
       data.checklists[type] = data.checklists[type].map(sec => {
         if (sec.items?.length && typeof sec.items[0] === 'string') {
@@ -1122,6 +1140,10 @@ function normaliseDB(data) {
         return sec;
       });
     });
+    // Backfill createJob checklist for databases created before this feature existed
+    if (!data.checklists.createJob) {
+      data.checklists.createJob = JSON.parse(JSON.stringify(DEFAULT_CHECKLISTS.createJob));
+    }
   }
   
   return data;
@@ -1465,7 +1487,7 @@ function logout() {
   document.getElementById('pw').value = '';
   stopSessionTimer();
   currentRole = ''; currentUser = ''; currentFullName = ''; activeJobId = null;
-  checkState = {}; totalItems = 0; currentLadleType = '';
+  checkState = {}; totalItems = 0; currentLadleType = ''; createCheckState = {};
 }
 
 // ══════════════════════════════════════════════════════════════════
@@ -1541,6 +1563,63 @@ function selectLadleType(type) {
   document.getElementById(`ltc-${type}`).classList.add(`selected-${type}`);
   document.getElementById('create-meta').style.display  = 'grid';
   document.getElementById('create-save').style.display  = 'flex';
+  renderCreateChecklist();
+}
+
+function renderCreateChecklist() {
+  const sections = _cloudCache?.checklists?.createJob ?? [];
+  const wrap      = document.getElementById('create-checklist-wrap');
+  const container = document.getElementById('create-cl-sections');
+  if (!container) return;
+
+  if (!sections.length) { wrap.style.display = 'none'; return; }
+  wrap.style.display = 'block';
+  container.innerHTML = '';
+
+  sections.forEach((sec, si) => {
+    const div = document.createElement('div');
+    div.className = 'section-block';
+
+    let html = `<div class="section-head"><i class="ti ${escapeHTML(sec.icon)} sec-icon"></i><span class="s-title">${escapeHTML(sec.title)}</span></div>`;
+
+    (sec.items ?? []).forEach((item, ii) => {
+      const label   = item.label ?? item;
+      const type    = item.type  ?? 'text';
+      const options = item.options ?? '';
+      const val     = createCheckState[`${si}-${ii}`] ?? '';
+      const filledClass = val.trim ? (val.trim().length > 0 ? 'filled' : '') : '';
+      const key     = `${si}-${ii}`;
+
+      let inputHtml = '';
+      if (type === 'textarea') {
+        inputHtml = `<textarea class="cl-input" oninput="updateCreateCheck('${key}',this.value)" placeholder="Enter notes...">${escapeHTML(val)}</textarea>`;
+      } else if (type === 'select') {
+        const opts = options.split(',').map(o => o.trim()).filter(Boolean);
+        inputHtml = `<select class="cl-input" onchange="updateCreateCheck('${key}',this.value)">
+          <option value="" disabled ${!val?'selected':''}>Select an option…</option>
+          ${opts.map(o => `<option value="${escapeHTML(o)}" ${val===o?'selected':''}>${escapeHTML(o)}</option>`).join('')}
+        </select>`;
+      } else if (type === 'number') {
+        inputHtml = `<input type="number" class="cl-input" oninput="updateCreateCheck('${key}',this.value)" value="${escapeHTML(val)}" placeholder="Enter value…"/>`;
+      } else {
+        inputHtml = `<input type="text" class="cl-input" oninput="updateCreateCheck('${key}',this.value)" value="${escapeHTML(val)}" placeholder="Enter value…"/>`;
+      }
+
+      html += `<div class="cl-item-box ${filledClass}" id="create-box-${key}">
+        <div class="cl-item-label"><i class="ti ti-check status-icon"></i>${escapeHTML(label)}</div>
+        ${inputHtml}
+      </div>`;
+    });
+
+    div.innerHTML = html;
+    container.appendChild(div);
+  });
+}
+
+function updateCreateCheck(key, val) {
+  createCheckState[key] = val;
+  const box = document.getElementById(`create-box-${key}`);
+  if (box) box.classList.toggle('filled', typeof val === 'string' && val.trim().length > 0);
 }
 
 function createJob() {
@@ -1552,12 +1631,15 @@ function createJob() {
   const template = JSON.parse(JSON.stringify(_cloudCache.checklists[currentLadleType]));
   const tItems   = template.reduce((acc, sec) => acc + (sec.items?.length ?? 0), 0);
 
+  const createTemplate = JSON.parse(JSON.stringify(_cloudCache.checklists.createJob ?? []));
+
   const newJob = {
     id: Date.now(), phase:'job_created',
     ladleType:currentLadleType, ladle, shift,
     createdBy:currentFullName, createdAt:new Date().toISOString(),
     pct:0, checkedCount:0, totalItems:tItems,
-    checklistTemplate:template, checkState:{}
+    checklistTemplate:template, checkState:{},
+    createChecklistTemplate:createTemplate, createCheckState:{...createCheckState}
   };
 
   const log = getLog();
@@ -1568,8 +1650,10 @@ function createJob() {
   document.getElementById('m-ladle').value = '';
   document.getElementById('m-shift').value = '';
   currentLadleType = '';
+  createCheckState = {};
   document.getElementById('create-meta').style.display = 'none';
   document.getElementById('create-save').style.display = 'none';
+  document.getElementById('create-checklist-wrap').style.display = 'none';
   document.querySelectorAll('.ladle-type-card').forEach(el => el.classList.remove('selected-steel','selected-hot'));
 
   showToast('Ladle Job Created & Issued to Central Mech.');
@@ -1619,593 +1703,4 @@ function renderActiveLadles() {
           <span class="alb-status-badge">${statusText}</span>
         </div>
         <div class="alb-grid">
-          <div class="alb-field"><div class="alb-field-label">Created By</div><div class="alb-field-val" style="font-size:12px;">${escapeHTML(r.createdBy)}</div></div>
-          <div class="alb-field"><div class="alb-field-label">Shift</div><div class="alb-field-val">${escapeHTML(r.shift)}</div></div>
-          <div class="alb-field"><div class="alb-field-label">Progress</div><div class="alb-field-val">${r.pct}%</div></div>
-        </div>
-        <div style="margin-top:1rem;">${btnHtml}</div>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-// BUG FIX #2: openWorkspace passes the ntab-udash element + mob string so
-// showPage deactivates the previous tab correctly when entering workspace.
-function openWorkspace(id) {
-  const job = getLog().find(x => x.id === id);
-  if (!job) return;
-  activeJobId = id;
-
-  // FIX #2: pass tab + mobTab args so nav highlight updates correctly
-  showPage('workspace', null, null);
-  // Deactivate all tabs manually since workspace has no nav button
-  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.mob-tab').forEach(t => t.classList.remove('active'));
-
-  const typeLabel = job.ladleType === 'hot' ? 'Hot Metal' : 'Steel';
-  document.getElementById('ws-type-badge').innerHTML =
-    `<i class="ti ${job.ladleType==='hot'?'ti-flame':'ti-bucket'}"></i> ${typeLabel} Ladle — No. ${escapeHTML(job.ladle)}`;
-
-  document.getElementById('phase-inspection').style.display  = 'none';
-  document.getElementById('phase-acceptance').style.display  = 'none';
-
-  const isPending = job.phase === 'pending_acceptance';
-  document.getElementById('ps2').className = `phase-step ${isPending?'ps-done':'ps-active'}`;
-  document.getElementById('pc2').className = `phase-connector${isPending?' conn-done':''}`;
-  document.getElementById('ps3').className = `phase-step ${isPending?'ps-active':'ps-idle'}`;
-
-  if (job.phase === 'job_created' || job.phase === 'inspection') {
-    document.getElementById('phase-inspection').style.display = 'block';
-
-    const sections = job.checklistTemplate ?? _cloudCache.checklists[job.ladleType];
-    const container = document.getElementById('cl-sections');
-    container.innerHTML = '';
-    checkState = job.checkState ?? {};
-    totalItems = job.totalItems;
-
-    sections.forEach((sec, si) => {
-      const div = document.createElement('div');
-      div.className = 'section-block';
-
-      let html = `<div class="section-head"><i class="ti ${escapeHTML(sec.icon)} sec-icon"></i><span class="s-title">${escapeHTML(sec.title)}</span></div>`;
-
-      (sec.items ?? []).forEach((item, ii) => {
-        const label      = item.label ?? item;
-        const type       = item.type  ?? 'text';
-        const options    = item.options ?? '';
-        const val        = checkState[`${si}-${ii}`] ?? '';
-        const filledClass= val.trim().length > 0 ? 'filled' : '';
-        const key        = `${si}-${ii}`;
-
-        let inputHtml = '';
-        if (type === 'textarea') {
-          inputHtml = `<textarea class="cl-input" oninput="updateCheck('${key}',this.value)" placeholder="Enter notes...">${escapeHTML(val)}</textarea>`;
-        } else if (type === 'select') {
-          const opts = options.split(',').map(o => o.trim()).filter(Boolean);
-          inputHtml = `<select class="cl-input" onchange="updateCheck('${key}',this.value)">
-            <option value="" disabled ${!val?'selected':''}>Select an option…</option>
-            ${opts.map(o => `<option value="${escapeHTML(o)}" ${val===o?'selected':''}>${escapeHTML(o)}</option>`).join('')}
-          </select>`;
-        } else if (type === 'number') {
-          inputHtml = `<input type="number" class="cl-input" oninput="updateCheck('${key}',this.value)" value="${escapeHTML(val)}" placeholder="Enter value…"/>`;
-        } else {
-          inputHtml = `<input type="text" class="cl-input" oninput="updateCheck('${key}',this.value)" value="${escapeHTML(val)}" placeholder="Enter value…"/>`;
-        }
-
-        html += `<div class="cl-item-box ${filledClass}" id="box-${key}">
-          <div class="cl-item-label"><i class="ti ti-check status-icon"></i>${escapeHTML(label)}</div>
-          ${inputHtml}
-        </div>`;
-      });
-
-      div.innerHTML = html;
-      container.appendChild(div);
-    });
-
-    document.getElementById('r-by').value         = job.cmRecvBy    ?? currentFullName;
-    document.getElementById('r-personal').value   = job.cmPersonal  ?? '';
-    document.getElementById('sig-cm-name').value  = job.cmSigName   ?? '';
-    document.getElementById('sig-cm-desig').value = job.cmSigDesig  ?? '';
-    updateProgressUI();
-
-    if (job.phase === 'job_created') {
-      job.phase = 'inspection';
-      saveLog(getLog().map(x => x.id === job.id ? job : x));
-    }
-  } else if (job.phase === 'pending_acceptance') {
-    document.getElementById('phase-acceptance').style.display = 'block';
-    document.getElementById('h-by').value             = job.amAcptBy  ?? currentFullName;
-    document.getElementById('h-personal').value       = job.amPersonal ?? '';
-    document.getElementById('hndv-sig-am-name').value = job.amSigName  ?? '';
-    document.getElementById('hndv-sig-am-desig').value= job.amSigDesig ?? '';
-
-    // Update the ladle type badge in Phase 3 header
-    const typeLabel = job.ladleType === 'hot' ? 'Hot Metal' : 'Steel';
-    document.getElementById('ws-accept-type-badge').innerHTML =
-      `<i class="ti ${job.ladleType==='hot'?'ti-flame':'ti-bucket'}"></i> ${typeLabel} Ladle — No. ${escapeHTML(job.ladle)}`;
-
-    // Render read-only checklist review for Area Maint to verify
-    const reviewContainer = document.getElementById('accept-checklist-review');
-    const template = job.checklistTemplate ?? _cloudCache.checklists[job.ladleType];
-    const cs       = job.checkState ?? {};
-    let reviewHTML = '';
-
-    if (template) {
-      template.forEach((sec, si) => {
-        const filled = (sec.items ?? []).filter((_, ii) => {
-          const v = cs[`${si}-${ii}`];
-          return typeof v === 'string' && v.trim().length > 0;
-        }).length;
-        const total  = (sec.items ?? []).length;
-        const allOk  = filled === total;
-
-        reviewHTML += `
-          <div class="section-block" style="margin-bottom:8px;">
-            <div class="section-head">
-              <i class="ti ${escapeHTML(sec.icon)} sec-icon"></i>
-              <span class="s-title">${escapeHTML(sec.title)}</span>
-              <span style="font-size:10px;font-weight:700;padding:2px 9px;border-radius:20px;
-                background:${allOk?'rgba(34,197,94,0.12)':'rgba(245,158,11,0.12)'};
-                color:${allOk?'#86efac':'var(--accent)'};
-                border:1px solid ${allOk?'rgba(34,197,94,0.25)':'rgba(245,158,11,0.25)'};">
-                ${filled}/${total}
-              </span>
-            </div>`;
-
-        (sec.items ?? []).forEach((item, ii) => {
-          const label  = item.label ?? item;
-          const val    = cs[`${si}-${ii}`] ?? '';
-          const hasVal = typeof val === 'string' && val.trim().length > 0;
-
-          reviewHTML += `
-            <div class="cl-item-box${hasVal?' filled':''}" style="pointer-events:none;">
-              <div class="cl-item-label">
-                <i class="ti ${hasVal?'ti-check':'ti-point'} status-icon" style="color:${hasVal?'var(--success)':'var(--text-muted)'};"></i>
-                ${escapeHTML(label)}
-              </div>
-              <div style="font-size:12px;font-family:var(--mono);padding:6px 10px;
-                background:rgba(0,0,0,0.15);border-radius:6px;
-                color:${hasVal?'var(--text-primary)':'var(--text-muted)'};
-                border:1px solid var(--border-mid);">
-                ${hasVal ? escapeHTML(val) : '<em>Not filled</em>'}
-              </div>
-            </div>`;
-        });
-
-        reviewHTML += `</div>`;
-      });
-    }
-
-    reviewContainer.innerHTML = reviewHTML || '<p style="color:var(--text-muted);font-size:12px;">No checklist data available.</p>';
-  }
-}
-
-function updateCheck(key, val) {
-  checkState[key] = val;
-  document.getElementById(`box-${key}`).classList.toggle('filled', typeof val === 'string' && val.trim().length > 0);
-  updateProgressUI();
-}
-
-function updateProgressUI() {
-  const done = Object.values(checkState).filter(v => typeof v === 'string' && v.trim().length > 0).length;
-  const pct  = totalItems > 0 ? Math.round((done / totalItems) * 100) : 0;
-  document.getElementById('prog-fill').style.width  = `${pct}%`;
-  document.getElementById('pct-label').textContent  = `${pct}% (${done}/${totalItems})`;
-}
-
-function closeWorkspace() {
-  activeJobId = null;
-  showPage('udash', document.getElementById('ntab-udash'), 'mob-udash');
-}
-
-function saveProgress() {
-  if (!activeJobId) return;
-  const log = getLog();
-  const job = log.find(x => x.id === activeJobId);
-  if (!job) return;
-
-  const done  = Object.values(checkState).filter(v => typeof v === 'string' && v.trim().length > 0).length;
-  job.checkState    = checkState;
-  job.checkedCount  = done;
-  job.pct           = Math.round((done / totalItems) * 100);
-  job.cmRecvBy      = document.getElementById('r-by').value;
-  job.cmPersonal    = document.getElementById('r-personal').value;
-  job.cmSigName     = document.getElementById('sig-cm-name').value;
-  job.cmSigDesig    = document.getElementById('sig-cm-desig').value;
-  saveLog(log);
-  showToast('Progress saved.');
-}
-
-function declareCompletion() {
-  if (!activeJobId) return;
-  saveProgress();
-  const log = getLog();
-  const job = log.find(x => x.id === activeJobId);
-  if (!job) return;
-  if (job.pct < 100 && !confirm('Checklist not 100% complete. Declare completion anyway?')) return;
-
-  job.phase               = 'pending_acceptance';
-  job.completedByCentralAt= new Date().toISOString();
-  job.cmRecvByCentral     = job.cmRecvBy;
-  saveLog(log);
-  showToast('Job completed and handed over to Area Maint.', 'success');
-  closeWorkspace();
-}
-
-function receiveLadle() {
-  if (!activeJobId) return;
-  const log = getLog();
-  const job = log.find(x => x.id === activeJobId);
-  if (!job) return;
-
-  job.amAcptBy  = document.getElementById('h-by').value;
-  job.amPersonal= document.getElementById('h-personal').value;
-  job.amSigName = document.getElementById('hndv-sig-am-name').value;
-  job.amSigDesig= document.getElementById('hndv-sig-am-desig').value;
-
-  if (!job.amSigName) { showToast('Please provide Area Sign-off name.', 'error'); return; }
-
-  job.phase          = 'complete';
-  job.acceptedByAreaAt = new Date().toISOString();
-  saveLog(log);
-  showToast('Ladle Received. Job Closed Successfully.', 'success');
-  closeWorkspace();
-}
-
-// ══════════════════════════════════════════════════════════════════
-// ADMIN: DASHBOARD, DATA LOG, LOGINS
-// ══════════════════════════════════════════════════════════════════
-function renderAdminDashboard() {
-  const log = getLog();
-  const count = phase => log.filter(x => x.phase === phase).length;
-  document.getElementById('dash-kpi').innerHTML = `
-    <div class="dash-card dc-total"><div class="dc-num">${log.length}</div><div class="dc-label">Total Jobs</div></div>
-    <div class="dash-card dc-complete"><div class="dc-num">${count('complete')}</div><div class="dc-label">Completed</div></div>
-    <div class="dash-card"><div class="dc-num" style="color:var(--blue-light);">${count('job_created')}</div><div class="dc-label">Awaiting Central</div></div>
-    <div class="dash-card"><div class="dc-num" style="color:var(--accent);">${count('inspection')}</div><div class="dc-label">In Inspection</div></div>
-    <div class="dash-card dc-pending"><div class="dc-num" style="color:var(--teal-light);">${count('pending_acceptance')}</div><div class="dc-label">Awaiting Area</div></div>
-  `;
-}
-
-// BUG FIX #1 & #4: totalDur is now computed AND rendered in the table
-function renderDataLog() {
-  const log = getLog();
-  document.getElementById('log-tbody').innerHTML = log.map(r => {
-    const cmDur    = formatDuration(r.createdAt, r.completedByCentralAt);
-    const totalDur = formatDuration(r.createdAt, r.acceptedByAreaAt);   // FIX #1
-    return `
-      <tr>
-        <td style="font-family:var(--mono);">${r.id}</td>
-        <td><span class="pill ${r.ladleType==='hot'?'pill-hot':'pill-steel'}">${r.ladleType.toUpperCase()}</span></td>
-        <td style="font-weight:700;">${escapeHTML(r.ladle)}</td>
-        <td>${escapeHTML(r.shift)}</td>
-        <td><span class="pill" style="border:1px solid #555;">${r.phase.replace(/_/g,' ').toUpperCase()}</span></td>
-        <td>${escapeHTML(r.createdBy)}</td>
-        <td><span style="color:var(--accent);font-weight:700;">${cmDur}</span></td>
-        <td><span style="color:var(--teal-light);font-weight:700;">${totalDur}</span></td>
-        <td>${r.phase==='complete'?'<span class="pill pill-complete">COMPLETE</span>':'<span class="pill pill-pending">PENDING</span>'}</td>
-        <td><button class="btn btn-ghost btn-xs btn-icon" onclick="showJobDetails(${r.id})"><i class="ti ti-eye"></i></button></td>
-      </tr>`;
-  }).join('');
-}
-
-function renderLogins() {
-  const history = _cloudCache?.loginHistory ?? [];
-  document.getElementById('logins-tbody').innerHTML = history.map(r => {
-    const color = r.status === 'Success' ? '#86efac' : '#fca5a5';
-    const sessionCell = r.status === 'Success'
-      ? (r.sessionDur
-          ? `<span style="font-family:var(--mono);color:var(--teal-light);font-weight:700;">${escapeHTML(r.sessionDur)}</span>`
-          : `<span style="color:var(--accent);font-size:11px;">Active</span>`)
-      : `<span style="color:var(--text-muted);">—</span>`;
-    return `
-    <tr>
-      <td style="font-family:var(--mono);font-size:11px;">${new Date(r.ts).toLocaleString('en-IN')}</td>
-      <td style="font-weight:700;">${escapeHTML(r.user)}</td>
-      <td><span class="role-badge rb-${r.role}">${r.role.toUpperCase()}</span></td>
-      <td style="color:${color};font-weight:700;">${escapeHTML(r.status)}</td>
-      <td>${sessionCell}</td>
-    </tr>`;
-  }).join('');
-}
-
-// BUG FIX #1 & #4: totalDur now rendered in Job Details modal
-function showJobDetails(id) {
-  const r = getLog().find(x => x.id === id);
-  if (!r) return;
-
-  const cmDur    = formatDuration(r.createdAt, r.completedByCentralAt);
-  const totalDur = formatDuration(r.createdAt, r.acceptedByAreaAt);   // FIX #1
-
-  let html = `
-    <div class="jd-grid">
-      <div class="jd-card"><div class="jd-label">Job ID</div><div class="jd-val" style="font-family:var(--mono);">${r.id}</div></div>
-      <div class="jd-card"><div class="jd-label">Ladle</div><div class="jd-val">${escapeHTML(r.ladle)} (${r.ladleType.toUpperCase()})</div></div>
-      <div class="jd-card"><div class="jd-label">Shift</div><div class="jd-val">${escapeHTML(r.shift)}</div></div>
-      <div class="jd-card"><div class="jd-label">Status</div><div class="jd-val">${r.phase.toUpperCase()}</div></div>
-      <div class="jd-card"><div class="jd-label">Created By</div><div class="jd-val">${escapeHTML(r.createdBy)}<br><span style="font-size:10px;font-weight:400;color:var(--text-muted);">${r.createdAt?new Date(r.createdAt).toLocaleString():'—'}</span></div></div>
-      <div class="jd-card"><div class="jd-label">CM Duration</div><div class="jd-val" style="color:var(--accent);">${cmDur}</div></div>
-      <div class="jd-card"><div class="jd-label">Total Duration</div><div class="jd-val" style="color:var(--teal-light);">${totalDur}</div></div>
-    </div>
-
-    <h4 style="margin-top:1.5rem;margin-bottom:0.5rem;font-size:14px;border-bottom:1px solid var(--border);padding-bottom:5px;color:var(--blue-light);">Signatures &amp; Handovers</h4>
-    <div class="jd-grid">
-      <div class="jd-card"><div class="jd-label">CM Receiver</div><div class="jd-val">${escapeHTML(r.cmRecvByCentral||r.cmRecvBy||'—')}<br><span style="font-size:10px;font-weight:400;color:var(--text-muted);">Pers: ${escapeHTML(r.rPersonal||r.cmPersonal||'—')}</span></div></div>
-      <div class="jd-card"><div class="jd-label">CM Sign-off</div><div class="jd-val">${escapeHTML(r.sigCmName||'—')}<br><span style="font-size:10px;font-weight:400;color:var(--text-muted);">${escapeHTML(r.sigCmDesig||'')}</span></div></div>
-      <div class="jd-card"><div class="jd-label">AM Accepter</div><div class="jd-val">${escapeHTML(r.amAcptBy||'—')}<br><span style="font-size:10px;font-weight:400;color:var(--text-muted);">Pers: ${escapeHTML(r.amPersonal||'—')}</span></div></div>
-      <div class="jd-card"><div class="jd-label">AM Sign-off</div><div class="jd-val">${escapeHTML(r.amSigName||'—')}<br><span style="font-size:10px;font-weight:400;color:var(--text-muted);">${escapeHTML(r.amSigDesig||'')}</span></div></div>
-    </div>
-
-    <h4 style="margin-top:1.5rem;margin-bottom:0.5rem;font-size:14px;border-bottom:1px solid var(--border);padding-bottom:5px;color:var(--teal-light);">Checklist Details</h4>`;
-
-  const template = r.checklistTemplate ?? _cloudCache?.checklists?.[r.ladleType];
-  if (template) {
-    template.forEach((sec, si) => {
-      html += `<div class="jd-section">
-        <div class="jd-section-head"><i class="ti ${escapeHTML(sec.icon)}" style="margin-right:6px;color:var(--accent);"></i>${escapeHTML(sec.title)}</div>`;
-      (sec.items ?? []).forEach((item, ii) => {
-        const label  = item.label ?? item;
-        let   val    = r.checkState?.[`${si}-${ii}`] ?? null;
-        if (val === true)  val = 'Checked / OK';
-        if (val === false) val = '';
-        const hasVal = typeof val === 'string' && val.trim().length > 0;
-        const icon   = hasVal
-          ? '<i class="ti ti-check" style="color:var(--success);font-size:16px;"></i>'
-          : '<i class="ti ti-alert-circle" style="color:var(--warning);font-size:16px;"></i>';
-        html += `<div class="jd-item">
-          <div style="font-weight:600;display:flex;align-items:flex-start;gap:6px;color:var(--text-primary);">${icon} ${escapeHTML(label)}</div>
-          <div style="padding-left:22px;color:${hasVal?'var(--text-primary)':'var(--text-muted)'};font-family:var(--mono);">${hasVal?escapeHTML(val):'<em>No data entered</em>'}</div>
-        </div>`;
-      });
-      html += `</div>`;
-    });
-  }
-
-  document.getElementById('jd-content').innerHTML = html;
-  document.getElementById('modal-job-details').classList.remove('hidden');
-}
-
-function closeJobDetails() {
-  document.getElementById('modal-job-details').classList.add('hidden');
-}
-
-// ══════════════════════════════════════════════════════════════════
-// ADMIN: CHECKLIST EDITOR
-// ══════════════════════════════════════════════════════════════════
-function getDraft() {
-  if (!_draft) _draft = JSON.parse(JSON.stringify(_cloudCache));
-  return _draft;
-}
-
-function renderChecklistEditor() {
-  const type      = document.getElementById('ce-type').value;
-  const list      = getDraft().checklists[type] ?? [];
-  const container = document.getElementById('ce-sections');
-
-  container.innerHTML = list.map((sec, si) => `
-    <div class="ce-sec" style="background:rgba(0,0,0,0.2);padding:12px;border-radius:8px;margin-bottom:10px;border:1px solid var(--border);">
-      <div style="display:flex;gap:8px;margin-bottom:8px;">
-        <input type="text" value="${escapeHTML(sec.icon)}" oninput="getDraft().checklists['${type}'][${si}].icon=this.value" placeholder="Icon (ti-search)" style="width:110px;background:rgba(255,255,255,0.05);border:1px solid var(--border-mid);border-radius:4px;color:#fff;padding:6px 10px;font-size:12px;outline:none;"/>
-        <input type="text" value="${escapeHTML(sec.title)}" oninput="getDraft().checklists['${type}'][${si}].title=this.value" placeholder="Section Title" style="flex:1;background:rgba(255,255,255,0.05);border:1px solid var(--border-mid);border-radius:4px;color:#fff;padding:6px 10px;font-size:12px;outline:none;"/>
-        <button class="btn btn-danger-soft btn-sm" onclick="ceRemoveSection(${si})"><i class="ti ti-trash"></i></button>
-      </div>
-      <div>${(sec.items ?? []).map((item, ii) => `
-        <div class="ce-item-row">
-          <div class="ce-item-inputs">
-            <input type="text" value="${escapeHTML(item.label)}" oninput="updateItem('${type}',${si},${ii},'label',this.value)" placeholder="Checkpoint prompt…">
-            <select onchange="updateItem('${type}',${si},${ii},'type',this.value);renderChecklistEditor();">
-              <option value="text"     ${item.type==='text'?'selected':''}>Short Text</option>
-              <option value="textarea" ${item.type==='textarea'?'selected':''}>Long Text</option>
-              <option value="number"   ${item.type==='number'?'selected':''}>Number</option>
-              <option value="select"   ${item.type==='select'?'selected':''}>Dropdown</option>
-            </select>
-            ${item.type==='select'?`<input type="text" value="${escapeHTML(item.options??'')}" oninput="updateItem('${type}',${si},${ii},'options',this.value)" placeholder="Comma-separated options (e.g. OK,Not OK,N/A)">`:'' }
-          </div>
-          <button class="btn btn-danger-soft btn-sm" style="padding:4px 8px;" onclick="delSecItem('${type}',${si},${ii})"><i class="ti ti-x"></i></button>
-        </div>`).join('')}
-        <button class="btn btn-ghost btn-sm" style="margin-top:8px;" onclick="addSecItem('${type}',${si})"><i class="ti ti-plus"></i> Add Field</button>
-      </div>
-    </div>`
-  ).join('');
-}
-
-function updateItem(type, si, ii, key, val) { getDraft().checklists[type][si].items[ii][key] = val; }
-
-function addSecItem(type, si) {
-  const items = getDraft().checklists[type][si].items ??= [];
-  items.push({label:'', type:'text', options:''});
-  renderChecklistEditor();
-}
-
-function delSecItem(type, si, ii) {
-  getDraft().checklists[type][si].items.splice(ii, 1);
-  renderChecklistEditor();
-}
-
-function ceAddSection() {
-  const type = document.getElementById('ce-type').value;
-  (getDraft().checklists[type] ??= []).push({icon:'ti-tool', title:'New Section', items:[{label:'',type:'text',options:''}]});
-  renderChecklistEditor();
-}
-
-function ceRemoveSection(si) {
-  if (!confirm('Delete this section?')) return;
-  const type = document.getElementById('ce-type').value;
-  getDraft().checklists[type].splice(si, 1);
-  renderChecklistEditor();
-}
-
-function ceSave() {
-  _cloudCache.checklists = getDraft().checklists;
-  _draft = null;
-  saveDB();
-  showToast('Checklists saved successfully!');
-}
-
-// ══════════════════════════════════════════════════════════════════
-// ADMIN: SETTINGS
-// ══════════════════════════════════════════════════════════════════
-function toggleMaintMode() {
-  _cloudCache.settings.maintenanceMode = document.getElementById('set-maint').checked;
-  saveDB();
-  showToast(_cloudCache.settings.maintenanceMode ? 'Maintenance Mode Enabled' : 'Maintenance Mode Disabled');
-}
-
-function exportDB() {
-  if (!_cloudCache) return;
-  const blob = new Blob([JSON.stringify(_cloudCache, null, 2)], {type:'application/json'});
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  a.href     = url;
-  a.download = `Ladle_DB_Backup_${new Date().toISOString().slice(0,10)}.json`;
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
-async function promptWipeCloud() {
-  const pass = prompt('WARNING: This will permanently erase ALL jobs and users.\nEnter master password to proceed:');
-  if (pass === null || pass === '') return;
-  if (pass !== WIPE_MASTER_PW) { showToast('Incorrect password.', 'error'); return; }
-  if (!confirm('Are you absolutely sure? This action cannot be undone.')) return;
-
-  showToast('Erasing cloud data…', 'info');
-  showSyncStatus('syncing');
-
-  _cloudCache = {
-    lm_log_v2:   [],
-    lm_users_v2: [{username:'admin',password:'admin',role:'admin',fullname:'Administrator'}],
-    checklists:  JSON.parse(JSON.stringify(DEFAULT_CHECKLISTS)),
-    loginHistory:[],
-    settings:    {maintenanceMode:false}
-  };
-
-  localStorage.setItem(LOCAL_KEY, JSON.stringify(_cloudCache));
-  if (_cloudSyncEnabled) {
-    const ok = await cloudWrite(_cloudCache);
-    if (ok) { showToast('Cloud data erased successfully.', 'success'); showSyncStatus('online'); }
-    else    { showToast('Cloud erase failed. Wiped locally.', 'error'); showSyncStatus('error'); }
-  } else {
-    showToast('Data wiped locally (sync is OFF).', 'info');
-  }
-  renderAdminDashboard(); renderDataLog(); renderUsers(); renderLogins(); renderChecklistEditor();
-}
-
-// ══════════════════════════════════════════════════════════════════
-// ADMIN: CLOUD STORAGE GRAPH
-// ══════════════════════════════════════════════════════════════════
-function renderStorageGraph() {
-  if (!_cloudCache) return;
-  const LIMIT_KB   = 1048576;      // Firebase free tier limit (~1 GB in KB)
-  const dataStr    = JSON.stringify(_cloudCache);
-  const usedBytes  = new Blob([dataStr]).size;
-  const usedKB     = usedBytes / 1024;
-
-  // Breakdown by section
-  const sections = [
-    { label: 'Jobs',         key: 'lm_log_v2',    color: '#f59e0b' },
-    { label: 'Users',        key: 'lm_users_v2',  color: '#3b82f6' },
-    { label: 'Checklists',   key: 'checklists',   color: '#8b5cf6' },
-    { label: 'Login History',key: 'loginHistory', color: '#0d9488' },
-    { label: 'Settings',     key: 'settings',     color: '#6b7280' },
-  ];
-  const breakdown = sections.map(s => {
-    const kb = new Blob([JSON.stringify(_cloudCache[s.key] ?? '')]).size / 1024;
-    return { ...s, kb };
-  });
-  const freeKB = Math.max(0, LIMIT_KB - usedKB);
-  const pct    = Math.min(100, (usedKB / LIMIT_KB) * 100);
-
-  // Bar fill
-  const barFill  = document.getElementById('storage-bar-fill');
-  const pctLabel = document.getElementById('storage-pct-label');
-  const usedLbl  = document.getElementById('storage-used-label');
-  if (barFill)  barFill.style.width = `${pct.toFixed(1)}%`;
-  if (barFill)  barFill.style.background = pct > 80 ? 'linear-gradient(90deg,#ef4444,#f97316)' : pct > 50 ? 'linear-gradient(90deg,#f59e0b,#22c55e)' : 'linear-gradient(90deg,#0d9488,#22c55e)';
-  if (pctLabel) pctLabel.textContent = `${pct.toFixed(1)}%`;
-  if (usedLbl)  usedLbl.textContent  = `${usedKB.toFixed(2)} KB used`;
-
-  // Legend
-  const legend = document.getElementById('storage-legend');
-  if (legend) {
-    legend.innerHTML = [
-      ...breakdown.map(s => `
-        <div style="display:flex;align-items:center;gap:8px;">
-          <span style="width:10px;height:10px;border-radius:50%;background:${s.color};flex-shrink:0;display:inline-block;"></span>
-          <span style="font-size:11px;color:var(--text-secondary);flex:1;">${s.label}</span>
-          <span style="font-size:11px;font-weight:700;font-family:var(--mono);color:var(--text-primary);">${s.kb.toFixed(2)} KB</span>
-        </div>`),
-      `<div style="display:flex;align-items:center;gap:8px;border-top:1px solid var(--border);padding-top:8px;margin-top:2px;">
-        <span style="width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);flex-shrink:0;display:inline-block;"></span>
-        <span style="font-size:11px;color:var(--text-muted);flex:1;">Free</span>
-        <span style="font-size:11px;font-weight:700;font-family:var(--mono);color:var(--text-muted);">${freeKB.toFixed(2)} KB</span>
-      </div>`
-    ].join('');
-  }
-
-  // Donut chart on canvas
-  const canvas = document.getElementById('storage-donut');
-  if (!canvas) return;
-  const ctx  = canvas.getContext('2d');
-  const cx   = canvas.width / 2, cy = canvas.height / 2, R = 54, r = 34;
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  const slices = [...breakdown.map(s => ({ kb: s.kb, color: s.color })), { kb: freeKB, color: 'rgba(255,255,255,0.07)' }];
-  const total  = slices.reduce((a, s) => a + s.kb, 0) || 1;
-  let angle    = -Math.PI / 2;
-  slices.forEach(s => {
-    const sweep = (s.kb / total) * 2 * Math.PI;
-    ctx.beginPath();
-    ctx.moveTo(cx, cy);
-    ctx.arc(cx, cy, R, angle, angle + sweep);
-    ctx.closePath();
-    ctx.fillStyle = s.color;
-    ctx.fill();
-    angle += sweep;
-  });
-
-  // Donut hole
-  ctx.beginPath();
-  ctx.arc(cx, cy, r, 0, 2 * Math.PI);
-  ctx.fillStyle = '#131f2e';
-  ctx.fill();
-
-  // Center text
-  ctx.fillStyle = '#eef4fb';
-  ctx.font = 'bold 15px Inter, sans-serif';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(`${pct.toFixed(0)}%`, cx, cy - 7);
-  ctx.fillStyle = '#7d93ad';
-  ctx.font = '10px Inter, sans-serif';
-  ctx.fillText('used', cx, cy + 9);
-}
-
-
-window.addEventListener('DOMContentLoaded', () => {
-  // Hide session chip until login
-  const chip = document.getElementById('session-chip');
-  if (chip) chip.style.display = 'none';
-
-  // Initialise sync toggle UI
-  updateSyncToggleUI();
-
-  const btn     = document.getElementById('login-btn');
-  const btnText = document.getElementById('login-btn-text');
-  btn.style.pointerEvents = 'none';
-  btn.style.opacity       = '0.5';
-  btnText.textContent     = 'Connecting to cloud…';
-
-  initCloudSync().then(() => {
-    if (_cloudOnline) {
-      // Cloud is up — allow login
-      btn.style.pointerEvents = 'auto';
-      btn.style.opacity       = '1';
-      const labels = {area:'Sign in as Area Maint.',central:'Sign in as Central Mech.',admin:'Sign in as Admin'};
-      btnText.textContent = labels[selectedRole] ?? 'Sign in';
-    }
-    // If cloud failed, initCloudSync shows the blocked overlay; button stays disabled
-  });
-});
-</script>
-</body>
-</html>
+          <div class="alb-field"><div class="alb-field-label">Created By</div><div class="alb-field-val" style="font-size:12px;">${escapeHTML(r.created
