@@ -1,0 +1,2577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Mechanical Ladle Maintenance — SMS TSK</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css"/>
+<style>
+/* ── RESET & TOKENS ─────────────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --steel:#0b1520;--steel-mid:#131f2e;--steel-card:#192638;--steel-light:#1f3045;
+  --accent:#f59e0b;--accent-dim:#d97706;--accent-glow:rgba(245,158,11,0.18);
+  --teal:#0d9488;--teal-light:#5eead4;
+  --purple:#7c3aed;--purple-light:#c4b5fd;
+  --blue:#3b82f6;--blue-light:#93c5fd;
+  --danger:#ef4444;--success:#22c55e;--warning:#f59e0b;
+  --hot:#f97316;--hot-light:#fed7aa;
+  --text-primary:#eef4fb;--text-secondary:#7d93ad;--text-muted:#3d5570;
+  --border:rgba(255,255,255,0.055);--border-mid:rgba(255,255,255,0.09);--border-strong:rgba(255,255,255,0.13);
+  --card-bg:rgba(255,255,255,0.028);--card-hover:rgba(255,255,255,0.05);
+  --input-bg:rgba(255,255,255,0.05);
+  --font:'Inter',sans-serif;--mono:'JetBrains Mono',monospace;
+  --r-xs:6px;--r-sm:10px;--r-md:14px;--r-lg:18px;--r-xl:24px;
+  --shadow-sm:0 1px 4px rgba(0,0,0,0.5);
+  --shadow-md:0 6px 20px rgba(0,0,0,0.55);
+  --shadow-lg:0 12px 40px rgba(0,0,0,0.65);
+}
+html{scroll-behavior:smooth;}
+body{font-family:var(--font);background:var(--steel);color:var(--text-primary);min-height:100vh;line-height:1.6;-webkit-font-smoothing:antialiased;}
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.12);border-radius:2px;}
+
+/* ── ANIMATIONS ─────────────────────────────────────────────── */
+@keyframes floatUp{0%{transform:translateY(110vh) scale(0.8);}100%{transform:translateY(-20vh) scale(1.1);}}
+@keyframes spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+@keyframes pulseGlow{0%,100%{box-shadow:0 0 0 0 rgba(245,158,11,0.3);}50%{box-shadow:0 0 20px 4px rgba(245,158,11,0.15);}}
+
+/* ── BG PARTICLES ───────────────────────────────────────────── */
+.bg-particles{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none;}
+.bg-particles span{position:absolute;border-radius:50%;opacity:0.04;animation:floatUp linear infinite;}
+.bg-particles span:nth-child(1){width:300px;height:300px;background:var(--accent);left:10%;animation-duration:25s;}
+.bg-particles span:nth-child(2){width:200px;height:200px;background:var(--teal);left:70%;animation-duration:20s;animation-delay:5s;}
+.bg-particles span:nth-child(3){width:150px;height:150px;background:var(--purple);left:40%;animation-duration:30s;animation-delay:10s;}
+.bg-particles span:nth-child(4){width:100px;height:100px;background:var(--blue);left:85%;animation-duration:18s;animation-delay:2s;}
+
+/* ── LOGIN SCREEN ───────────────────────────────────────────── */
+#login-screen{position:fixed;inset:0;z-index:1000;display:flex;align-items:flex-start;justify-content:center;padding:1rem;overflow-y:auto;}
+#login-screen::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 70% at 50% 0%,#0d1f35 0%,#060e18 100%);z-index:-2;}
+#login-screen::after{content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 60% 40% at 20% 80%,rgba(13,148,136,0.07) 0%,transparent 60%),
+             radial-gradient(ellipse 50% 50% at 80% 20%,rgba(124,58,237,0.06) 0%,transparent 60%),
+             radial-gradient(ellipse 40% 40% at 50% 50%,rgba(245,158,11,0.05) 0%,transparent 60%);
+  z-index:-1;pointer-events:none;}
+#login-screen.hidden{display:none;}
+
+.login-topbar{position:absolute;top:0;left:0;right:0;height:58px;display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;background:rgba(8,15,24,0.6);backdrop-filter:blur(12px);border-bottom:1px solid var(--border-mid);z-index:100;}
+.login-topbar-brand{font-size:11px;font-weight:700;color:var(--text-muted);letter-spacing:0.12em;text-transform:uppercase;}
+.login-wrap{width:100%;max-width:500px;animation:slideUp 0.5s ease;margin:74px auto 2rem;}
+.login-brand{text-align:center;margin-bottom:2rem;}
+.login-brand-icon{width:76px;height:76px;background:linear-gradient(145deg,#f59e0b,#d97706);border-radius:22px;display:inline-flex;align-items:center;justify-content:center;font-size:36px;color:#0f172a;box-shadow:0 0 0 8px rgba(245,158,11,0.08),0 0 40px rgba(245,158,11,0.25),var(--shadow-lg);position:relative;z-index:1;}
+.login-brand-ring{position:absolute;inset:-6px;border-radius:28px;border:1.5px solid rgba(245,158,11,0.2);animation:pulseGlow 3s ease-in-out infinite;}
+.login-brand h1{font-size:20px;font-weight:800;letter-spacing:-0.5px;margin-bottom:6px;background:linear-gradient(135deg,#f0f6fc,#94a3b8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.login-brand p{font-size:11px;color:var(--text-muted);font-weight:500;letter-spacing:0.08em;text-transform:uppercase;}
+.login-box{background:linear-gradient(145deg,rgba(25,38,56,0.9),rgba(19,31,46,0.95));border:1px solid var(--border-mid);border-radius:var(--r-xl);padding:2rem;backdrop-filter:blur(24px);box-shadow:var(--shadow-lg),inset 0 1px 0 rgba(255,255,255,0.06);}
+
+/* Role Cards */
+.role-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:1.75rem;}
+.role-card{padding:1.25rem 0.5rem;background:rgba(255,255,255,0.03);border:1.5px solid var(--border);border-radius:var(--r-md);cursor:pointer;transition:all 0.25s;text-align:center;position:relative;overflow:hidden;}
+.role-card::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,0.04),transparent);opacity:0;transition:opacity 0.2s;}
+.role-card:hover::after{opacity:1;}
+.role-card:hover{transform:translateY(-2px);}
+.role-card-icon{width:44px;height:44px;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:10px;transition:transform 0.2s;}
+.role-card:hover .role-card-icon{transform:scale(1.08);}
+.rc-area .role-card-icon{background:linear-gradient(135deg,rgba(59,130,246,0.3),rgba(59,130,246,0.1));color:var(--blue-light);box-shadow:0 4px 12px rgba(59,130,246,0.15);}
+.rc-central .role-card-icon{background:linear-gradient(135deg,rgba(13,148,136,0.3),rgba(13,148,136,0.1));color:var(--teal-light);box-shadow:0 4px 12px rgba(13,148,136,0.15);}
+.rc-admin .role-card-icon{background:linear-gradient(135deg,rgba(124,58,237,0.3),rgba(124,58,237,0.1));color:var(--purple-light);box-shadow:0 4px 12px rgba(124,58,237,0.15);}
+.role-card.active-area{border-color:rgba(59,130,246,0.55);background:rgba(59,130,246,0.07);box-shadow:0 0 20px rgba(59,130,246,0.1),inset 0 1px 0 rgba(59,130,246,0.1);}
+.role-card.active-central{border-color:rgba(13,148,136,0.55);background:rgba(13,148,136,0.07);box-shadow:0 0 20px rgba(13,148,136,0.1),inset 0 1px 0 rgba(13,148,136,0.1);}
+.role-card.active-admin{border-color:rgba(124,58,237,0.55);background:rgba(124,58,237,0.07);box-shadow:0 0 20px rgba(124,58,237,0.1),inset 0 1px 0 rgba(124,58,237,0.1);}
+.role-card-label{font-size:12px;font-weight:700;margin-bottom:3px;}
+.role-card-sub{font-size:9px;color:var(--text-muted);}
+.role-check{position:absolute;top:8px;right:8px;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;opacity:0;transform:scale(0);transition:all 0.2s;}
+.role-card.active-area .role-check{opacity:1;transform:scale(1);background:var(--blue);color:#fff;}
+.role-card.active-central .role-check{opacity:1;transform:scale(1);background:var(--teal);color:#fff;}
+.role-card.active-admin .role-check{opacity:1;transform:scale(1);background:var(--purple);color:#fff;}
+.role-card.active-area .role-card-label{color:var(--blue-light);}
+.role-card.active-central .role-card-label{color:var(--teal-light);}
+.role-card.active-admin .role-card-label{color:var(--purple-light);}
+
+/* Login section / fields */
+.login-section-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:var(--text-muted);margin-bottom:0.85rem;display:flex;align-items:center;gap:8px;}
+.login-section-label::after{content:'';flex:1;height:1px;background:var(--border);}
+.field{margin-bottom:1.15rem;position:relative;}
+.field label{display:block;font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.06em;}
+
+.input-wrap{position:relative;display:block;}
+.input-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:18px;pointer-events:none;transition:color 0.2s;z-index:2;}
+.input-wrap input,.input-wrap select{width:100%;padding:13px 14px 13px 42px;background:rgba(255,255,255,0.04);border:1.5px solid var(--border-mid);border-radius:var(--r-sm);color:var(--text-primary);font-family:var(--font);font-size:14px;outline:none;transition:all 0.2s;}
+.input-wrap select{cursor:pointer;appearance:none;-webkit-appearance:none;}
+.input-wrap select option{background:var(--steel-mid);}
+
+.theme-area .input-wrap:focus-within{border-radius:var(--r-sm);}
+.theme-area .input-wrap:focus-within .input-icon{color:var(--blue-light);}
+.theme-area .input-wrap input:focus{border-color:var(--blue);background:rgba(255,255,255,0.08);box-shadow:0 0 0 3px rgba(59,130,246,0.15);}
+.theme-central .input-wrap:focus-within .input-icon{color:var(--teal-light);}
+.theme-central .input-wrap input:focus{border-color:var(--teal);background:rgba(255,255,255,0.08);box-shadow:0 0 0 3px rgba(13,148,136,0.15);}
+.theme-admin .input-wrap:focus-within .input-icon{color:var(--purple-light);}
+.theme-admin .input-wrap input:focus{border-color:var(--purple);background:rgba(255,255,255,0.08);box-shadow:0 0 0 3px rgba(124,58,237,0.15);}
+
+.login-err{font-size:12px;color:var(--danger);margin-bottom:1rem;display:none;padding:10px 14px;background:rgba(239,68,68,0.07);border-radius:var(--r-sm);border:1.5px solid rgba(239,68,68,0.2);line-height:1.6;align-items:flex-start;gap:8px;}
+.login-err i{font-size:16px;flex-shrink:0;margin-top:1px;}
+.btn-login{width:100%;padding:14px;border:none;border-radius:var(--r-sm);font-family:var(--font);font-size:15px;font-weight:700;cursor:pointer;transition:all 0.25s;display:flex;align-items:center;justify-content:center;gap:10px;position:relative;overflow:hidden;letter-spacing:0.02em;}
+.btn-login::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,0.1),transparent);opacity:0;transition:opacity 0.2s;}
+.btn-login:hover::before{opacity:1;}
+.btn-login:hover{transform:translateY(-1px);}
+.btn-login:active{transform:scale(0.99) translateY(0);}
+.btn-login-area{background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;box-shadow:0 4px 20px rgba(59,130,246,0.35);}
+.btn-login-central{background:linear-gradient(135deg,#0ea5a0,#0d9488);color:#fff;box-shadow:0 4px 20px rgba(13,148,136,0.35);}
+.btn-login-admin{background:linear-gradient(135deg,#8b5cf6,#7c3aed);color:#fff;box-shadow:0 4px 20px rgba(124,58,237,0.35);}
+
+/* ── APP SHELL ──────────────────────────────────────────────── */
+#app{display:none;flex-direction:column;min-height:100vh;}
+
+/* ── NAVBAR ─────────────────────────────────────────────────── */
+.nav{background:rgba(8,15,24,0.97);border-bottom:1px solid rgba(255,255,255,0.07);padding:0 1.25rem;height:58px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;backdrop-filter:blur(20px);}
+.nav-left{display:flex;align-items:center;gap:12px;min-width:0;}
+.nav-logo{width:36px;height:36px;flex-shrink:0;background:linear-gradient(135deg,#f59e0b,#d97706);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;color:#0f172a;box-shadow:0 2px 10px rgba(245,158,11,0.3);}
+.nav-brand{min-width:0;}
+.nav-title{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.nav-sub{font-size:9px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.08em;}
+.nav-center{display:flex;gap:3px;flex:1;justify-content:center;padding:0 1rem;}
+.nav-tab{padding:7px 13px;background:transparent;border:none;color:var(--text-secondary);font-family:var(--font);font-size:12px;font-weight:500;border-radius:var(--r-sm);cursor:pointer;transition:all 0.18s;display:flex;align-items:center;gap:6px;white-space:nowrap;}
+.nav-tab i{font-size:15px;}
+.nav-tab:hover{background:rgba(255,255,255,0.05);color:var(--text-primary);}
+.nav-tab.active{background:rgba(245,158,11,0.1);color:var(--accent);border:1px solid rgba(245,158,11,0.18);}
+.nav-tab.admin-only,.nav-tab.area-only{display:none;}
+.nav-right{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.user-chip{display:flex;align-items:center;gap:9px;}
+.user-avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;flex-shrink:0;}
+.ua-admin{background:linear-gradient(135deg,#8b5cf6,#6d28d9);box-shadow:0 0 12px rgba(124,58,237,0.4);}
+.ua-area{background:linear-gradient(135deg,#3b82f6,#2563eb);box-shadow:0 0 12px rgba(59,130,246,0.4);}
+.ua-central{background:linear-gradient(135deg,#0ea5a0,#0a7a72);box-shadow:0 0 12px rgba(13,148,136,0.4);}
+.user-info{display:flex;flex-direction:column;}
+.user-name{font-size:12px;font-weight:600;}
+.role-badge{font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;text-transform:uppercase;letter-spacing:0.07em;display:inline-block;}
+.rb-admin{background:rgba(124,58,237,0.2);color:var(--purple-light);border:1px solid rgba(124,58,237,0.3);}
+.rb-area{background:rgba(59,130,246,0.2);color:var(--blue-light);border:1px solid rgba(59,130,246,0.3);}
+.rb-central{background:rgba(13,148,136,0.15);color:var(--teal-light);border:1px solid rgba(13,148,136,0.25);}
+
+/* Live clock */
+.live-clock{display:flex;align-items:center;gap:6px;background:rgba(0,0,0,0.25);padding:5px 11px;border-radius:8px;border:1px solid var(--border-mid);}
+.live-clock i{font-size:13px;color:var(--accent);}
+.live-clock span{font-family:var(--mono);font-size:11px;font-weight:500;color:var(--text-primary);white-space:nowrap;}
+@media(max-width:500px){.live-clock span{display:none;}.live-clock{padding:5px 8px;}}
+
+/* ── SYNC STATUS ─────────────────────────────────────────────── */
+#sync-status,#login-sync-status{display:flex;align-items:center;gap:6px;padding:5px 11px;background:rgba(255,255,255,0.03);border:1px solid var(--border-mid);border-radius:var(--r-sm);}
+#login-sync-status{border:none;background:none;padding:0;}
+
+/* ── BUTTON SYSTEM ───────────────────────────────────────────── */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:8px 16px;border-radius:var(--r-sm);font-family:var(--font);font-size:13px;font-weight:500;cursor:pointer;transition:all 0.2s;border:none;white-space:nowrap;position:relative;overflow:hidden;}
+.btn::after{content:'';position:absolute;inset:0;background:rgba(255,255,255,0);transition:background 0.2s;}
+.btn:hover::after{background:rgba(255,255,255,0.06);}
+.btn:active{transform:scale(0.98);}
+.btn-ghost{background:rgba(255,255,255,0.04);border:1px solid var(--border-mid);color:var(--text-secondary);}
+.btn-ghost:hover{border-color:var(--border-strong);color:var(--text-primary);}
+.btn-danger-soft{background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.22);color:#fca5a5;font-size:12px;padding:6px 12px;}
+.btn-danger-soft:hover{background:rgba(239,68,68,0.13);}
+.btn-teal{background:linear-gradient(135deg,#0ea5a0,#0d9488);color:#fff;box-shadow:0 2px 10px rgba(13,148,136,0.28);}
+.btn-teal:hover{box-shadow:0 4px 16px rgba(13,148,136,0.38);}
+.btn-blue{background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;box-shadow:0 2px 10px rgba(59,130,246,0.28);}
+.btn-blue:hover{box-shadow:0 4px 16px rgba(59,130,246,0.38);}
+.btn-amber{background:linear-gradient(135deg,#f59e0b,#d97706);color:#0f172a;font-weight:700;box-shadow:0 2px 10px rgba(245,158,11,0.25);}
+.btn-amber:hover{box-shadow:0 4px 16px rgba(245,158,11,0.35);}
+.btn-purple{background:linear-gradient(135deg,#8b5cf6,#7c3aed);color:#fff;box-shadow:0 2px 10px rgba(124,58,237,0.28);}
+.btn-central{background:linear-gradient(135deg,#0ea5a0,#0d9488);color:#fff;box-shadow:0 2px 10px rgba(13,148,136,0.28);display:inline-flex;align-items:center;gap:7px;padding:8px 16px;border-radius:var(--r-sm);font-family:var(--font);font-size:13px;font-weight:500;cursor:pointer;transition:all 0.2s;border:none;}
+.btn-sm{padding:6px 12px;font-size:12px;}
+.btn-xs{padding:4px 9px;font-size:11px;}
+.btn-icon{padding:7px;border-radius:var(--r-sm);}
+
+/* ── PAGES ───────────────────────────────────────────────────── */
+.page{display:none;padding:1.5rem;max-width:980px;margin:0 auto;width:100%;}
+.page.active{display:block;animation:fadeIn 0.25s ease;}
+
+/* ── PAGE HEADER ─────────────────────────────────────────────── */
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:12px;}
+.page-header h1{font-size:22px;font-weight:800;letter-spacing:-0.3px;}
+.page-header p{font-size:12px;color:var(--text-secondary);margin-top:3px;}
+
+/* ── LADLE TYPE SELECTOR ─────────────────────────────────────── */
+.ladle-selector{margin-bottom:1.5rem;}
+.ladle-selector-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted);margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.ladle-selector-label::after{content:'';flex:1;height:1px;background:var(--border);}
+.ladle-type-cards{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.ladle-type-card{padding:1.4rem;background:var(--card-bg);border:1.5px solid var(--border);border-radius:var(--r-lg);cursor:pointer;transition:all 0.25s;position:relative;overflow:hidden;}
+.ladle-type-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,0.02),transparent);pointer-events:none;}
+.ladle-type-card:hover{transform:translateY(-3px);border-color:var(--border-strong);box-shadow:var(--shadow-md);}
+.ladle-type-card.selected-steel{border-color:rgba(59,130,246,0.55);background:rgba(59,130,246,0.06);box-shadow:0 0 24px rgba(59,130,246,0.1);}
+.ladle-type-card.selected-hot{border-color:rgba(249,115,22,0.55);background:rgba(249,115,22,0.06);box-shadow:0 0 24px rgba(249,115,22,0.1);}
+.ladle-type-icon{width:48px;height:48px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:12px;transition:transform 0.2s;}
+.ladle-type-card:hover .ladle-type-icon{transform:scale(1.1);}
+.ltc-steel .ladle-type-icon{background:linear-gradient(135deg,rgba(59,130,246,0.25),rgba(59,130,246,0.1));color:var(--blue-light);box-shadow:0 4px 12px rgba(59,130,246,0.15);}
+.ltc-hot .ladle-type-icon{background:linear-gradient(135deg,rgba(249,115,22,0.25),rgba(249,115,22,0.1));color:var(--hot-light);box-shadow:0 4px 12px rgba(249,115,22,0.15);}
+.ladle-type-name{font-size:15px;font-weight:700;margin-bottom:4px;}
+.ladle-type-desc{font-size:11px;color:var(--text-secondary);line-height:1.5;}
+.ladle-type-card.selected-steel .ladle-type-name{color:var(--blue-light);}
+.ladle-type-card.selected-hot .ladle-type-name{color:var(--hot-light);}
+.lt-check{position:absolute;top:12px;right:12px;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;opacity:0;transform:scale(0);transition:all 0.2s;}
+.selected-steel .lt-check,.selected-hot .lt-check{opacity:1;transform:scale(1);}
+.selected-steel .lt-check{background:var(--blue);color:#fff;box-shadow:0 2px 8px rgba(59,130,246,0.4);}
+.selected-hot .lt-check{background:var(--hot);color:#fff;box-shadow:0 2px 8px rgba(249,115,22,0.4);}
+
+/* ── CHECKLIST HEADER ───────────────────────────────────────── */
+.cl-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:10px;}
+.cl-type-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 13px;border-radius:20px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;}
+.ctb-steel{background:rgba(59,130,246,0.12);color:var(--blue-light);border:1px solid rgba(59,130,246,0.25);}
+.ctb-hot{background:rgba(249,115,22,0.12);color:var(--hot-light);border:1px solid rgba(249,115,22,0.25);}
+
+/* ── META STRIP ─────────────────────────────────────────────── */
+.meta-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:1.25rem;}
+.meta-card{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--r-sm);padding:11px 13px;transition:all 0.2s;}
+.meta-card:focus-within{border-color:rgba(245,158,11,0.5);box-shadow:0 0 0 3px rgba(245,158,11,0.06);}
+.meta-card label{font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.09em;display:flex;align-items:center;gap:5px;margin-bottom:5px;font-weight:700;}
+.meta-card input,.meta-card select{background:transparent;border:none;color:var(--text-primary);font-family:var(--mono);font-size:13px;width:100%;outline:none;}
+.meta-card select option{background:var(--steel-mid);}
+
+/* ── TIMING PANELS ──────────────────────────────────────────── */
+.timing-panel{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;position:relative;overflow:hidden;margin-bottom:1.25rem;}
+.timing-panel::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+.timing-panel.recv::before{background:linear-gradient(90deg,var(--teal),rgba(13,148,136,0.3),transparent);}
+.timing-panel.hndv::before{background:linear-gradient(90deg,var(--blue),rgba(59,130,246,0.3),transparent);}
+.timing-badge{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;padding:4px 11px;border-radius:20px;margin-bottom:14px;}
+.badge-recv{background:rgba(13,148,136,0.12);color:var(--teal-light);border:1px solid rgba(13,148,136,0.22);}
+.badge-hndv{background:rgba(59,130,246,0.12);color:var(--blue-light);border:1px solid rgba(59,130,246,0.22);}
+.t-fields{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+.t-field label{font-size:9px;color:var(--text-muted);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.07em;font-weight:700;}
+.t-field input{width:100%;background:rgba(255,255,255,0.04);border:1.5px solid var(--border-mid);border-radius:var(--r-xs);padding:8px 10px;color:var(--text-primary);font-family:var(--mono);font-size:12px;outline:none;transition:all 0.2s;}
+.t-field input:focus{border-color:var(--accent);background:rgba(255,255,255,0.07);box-shadow:0 0 0 2px rgba(245,158,11,0.07);}
+.t-field.full{grid-column:1/-1;}
+
+/* ── PROGRESS ───────────────────────────────────────────────── */
+.progress-wrap{margin-bottom:1.25rem;background:var(--card-bg);border:1px solid var(--border);border-radius:var(--r-md);padding:13px 16px;}
+.progress-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;}
+.progress-label{font-size:12px;color:var(--text-secondary);font-weight:600;display:flex;align-items:center;gap:7px;}
+.progress-pct{font-size:15px;font-weight:800;color:var(--accent);font-family:var(--mono);}
+.progress-track{height:7px;background:rgba(255,255,255,0.05);border-radius:4px;overflow:hidden;}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--teal),#22c55e,var(--accent));border-radius:4px;transition:width 0.5s cubic-bezier(.4,0,.2,1);}
+
+/* ── SECTION BLOCKS & INPUTS ─────────────────────────────────── */
+.section-block{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--r-md);margin-bottom:10px;overflow:hidden;transition:all 0.2s;}
+.section-block:hover{border-color:var(--border-mid);box-shadow:0 4px 16px rgba(0,0,0,0.3);}
+.section-head{padding:12px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);background:rgba(255,255,255,0.015);}
+.section-head i.sec-icon{font-size:17px;color:var(--accent);}
+.section-head .s-title{font-size:13px;font-weight:700;flex:1;}
+.cl-item-box{padding:12px 16px;border-bottom:1px solid var(--border);background:rgba(0,0,0,0.1);transition:all 0.2s;}
+.cl-item-box:last-child{border-bottom:none;}
+.cl-item-box.filled{background:rgba(34,197,94,0.03);border-left:3px solid var(--success);padding-left:13px;}
+.cl-item-label{font-size:13px;font-weight:600;margin-bottom:8px;color:var(--text-primary);line-height:1.4;display:flex;align-items:flex-start;gap:8px;}
+.cl-item-label i.status-icon{color:var(--text-muted);font-size:14px;margin-top:2px;transition:color 0.2s;}
+.cl-item-box.filled .cl-item-label i.status-icon{color:var(--success);}
+.cl-input{width:100%;background:rgba(255,255,255,0.04);border:1.5px solid var(--border-mid);border-radius:var(--r-xs);padding:9px 12px;color:var(--text-primary);font-family:var(--font);font-size:13px;outline:none;transition:all 0.2s;}
+.cl-input:focus{border-color:var(--accent);background:rgba(255,255,255,0.07);box-shadow:0 0 0 3px rgba(245,158,11,0.1);}
+textarea.cl-input{resize:vertical;min-height:60px;}
+select.cl-input{cursor:pointer;}
+select.cl-input option{background:var(--steel-mid);color:#fff;}
+
+/* ── SIGNATURES ─────────────────────────────────────────────── */
+.sig-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:1.25rem;}
+.sig-card{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;position:relative;overflow:hidden;}
+.sig-card::before{content:'';position:absolute;top:0;left:0;bottom:0;width:3px;}
+.sig-card.blue-sig::before{background:linear-gradient(180deg,var(--blue),transparent);}
+.sig-card.teal-sig::before{background:linear-gradient(180deg,var(--teal),transparent);}
+.sig-card .sc-label{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px;font-weight:700;}
+.sig-card input{width:100%;background:rgba(255,255,255,0.04);border:1.5px solid var(--border-mid);border-radius:var(--r-xs);padding:8px 11px;color:var(--text-primary);font-family:var(--font);font-size:12px;outline:none;margin-bottom:8px;}
+
+/* ── SAVE BAR ───────────────────────────────────────────────── */
+.save-bar{position:sticky;bottom:0;padding:13px 1.5rem;background:rgba(8,15,24,0.97);border-top:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;justify-content:space-between;backdrop-filter:blur(20px);margin:1.5rem -1.5rem -1.5rem;gap:12px;z-index:50;}
+.save-bar .save-info{font-size:12px;color:var(--text-secondary);flex:1;}
+
+/* ── DASHBOARD & SETTINGS ───────────────────────────────────── */
+.dash-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:12px;margin-bottom:1.5rem;}
+.dash-card{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;position:relative;overflow:hidden;transition:all 0.22s;cursor:default;}
+.dash-card:hover{transform:translateY(-2px);border-color:var(--border-mid);box-shadow:var(--shadow-md);}
+.dash-card::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+.dc-total::after{background:linear-gradient(90deg,var(--blue),transparent);}
+.dc-complete::after{background:linear-gradient(90deg,var(--success),transparent);}
+.dc-pending::after{background:linear-gradient(90deg,var(--warning),transparent);}
+.dc-num{font-size:30px;font-weight:800;font-family:var(--mono);margin-bottom:2px;line-height:1;}
+.dc-label{font-size:11px;color:var(--text-secondary);font-weight:500;}
+.dash-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+.dash-panel{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden;}
+.dash-panel-head{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:9px;background:rgba(255,255,255,0.015);}
+.dash-panel-head span{font-size:13px;font-weight:700;flex:1;}
+.dash-panel-body{padding:14px 16px;}
+
+/* ── ACTIVE LADLE BANNER ────────────────────────────────────── */
+.active-ladle-container{margin-bottom:2rem;}
+.active-ladle-banner{border-radius:var(--r-lg);padding:1.5rem;position:relative;overflow:hidden;}
+.active-ladle-banner.phase-created{background:linear-gradient(135deg,rgba(59,130,246,0.1),rgba(59,130,246,0.05));border:1.5px solid rgba(59,130,246,0.35);}
+.active-ladle-banner.phase-inspection{background:linear-gradient(135deg,rgba(13,148,136,0.1),rgba(13,148,136,0.05));border:1.5px solid rgba(13,148,136,0.35);}
+.active-ladle-banner.phase-pending_acceptance{background:linear-gradient(135deg,rgba(245,158,11,0.1),rgba(245,158,11,0.05));border:1.5px solid rgba(245,158,11,0.35);}
+.alb-top{display:flex;align-items:center;gap:12px;margin-bottom:1.1rem;}
+.alb-title{font-size:16px;font-weight:800;flex:1;}
+.alb-status-badge{font-size:10px;font-weight:700;padding:4px 12px;border-radius:20px;}
+.phase-created .alb-status-badge{background:rgba(59,130,246,0.18);color:var(--blue-light);border:1px solid rgba(59,130,246,0.35);}
+.phase-inspection .alb-status-badge{background:rgba(13,148,136,0.18);color:var(--teal-light);border:1px solid rgba(13,148,136,0.35);}
+.phase-pending_acceptance .alb-status-badge{background:rgba(245,158,11,0.18);color:var(--accent);border:1px solid rgba(245,158,11,0.35);}
+.alb-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:9px;margin-bottom:1.1rem;}
+.alb-field{background:rgba(0,0,0,0.2);border-radius:var(--r-sm);padding:9px 12px;}
+.alb-field-label{font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:3px;font-weight:700;}
+.alb-field-val{font-size:14px;font-weight:700;font-family:var(--mono);}
+.no-active-card{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--r-xl);padding:3.5rem 2rem;text-align:center;}
+.no-active-card .nac-icon{width:72px;height:72px;border-radius:22px;background:rgba(255,255,255,0.04);display:inline-flex;align-items:center;justify-content:center;font-size:36px;color:var(--text-muted);margin-bottom:1.25rem;border:1px solid var(--border);}
+.no-active-card h3{font-size:18px;font-weight:700;margin-bottom:8px;}
+.no-active-card p{font-size:13px;color:var(--text-secondary);max-width:320px;margin:0 auto 1.75rem;line-height:1.6;}
+
+/* ── PHASE STEPS ─────────────────────────────────────────────── */
+.phase-steps{display:flex;align-items:center;margin-bottom:1.5rem;background:var(--card-bg);border:1px solid var(--border);border-radius:var(--r-md);padding:6px;}
+.phase-step{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:var(--r-sm);font-size:12px;font-weight:600;flex:1;justify-content:center;transition:all 0.2s;}
+.phase-step-num{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;}
+.ps-done{color:#86efac;}
+.ps-done .phase-step-num{background:var(--success);color:#fff;box-shadow:0 2px 8px rgba(34,197,94,0.35);}
+.ps-active{background:rgba(249,115,22,0.08);color:var(--hot-light);}
+.ps-active .phase-step-num{background:var(--hot);color:#fff;box-shadow:0 2px 8px rgba(249,115,22,0.4);}
+.ps-idle{color:var(--text-muted);}
+.ps-idle .phase-step-num{background:rgba(255,255,255,0.06);color:var(--text-muted);}
+.phase-connector{flex:0 0 24px;height:2px;background:var(--border);}
+.phase-connector.conn-done{background:var(--success);}
+
+/* ── DATA LOG / TABLES ───────────────────────────────────────── */
+.filter-bar{display:flex;gap:9px;margin-bottom:14px;flex-wrap:wrap;}
+.filter-bar input,.filter-bar select{padding:9px 13px;background:var(--card-bg);border:1.5px solid var(--border-mid);border-radius:var(--r-sm);color:var(--text-primary);font-family:var(--font);font-size:12px;outline:none;transition:all 0.2s;}
+.filter-bar input:focus,.filter-bar select:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(245,158,11,0.07);}
+.filter-bar input{flex:1;min-width:160px;}
+.filter-bar select option{background:#131f2e;}
+.table-wrap{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden;overflow-x:auto;margin-bottom:1rem;}
+.log-table,.user-table{width:100%;border-collapse:collapse;min-width:580px;}
+.log-table th,.user-table th{text-align:left;padding:10px 13px;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:0.09em;color:var(--text-muted);border-bottom:1px solid var(--border);background:rgba(255,255,255,0.015);}
+.log-table td,.user-table td{padding:10px 13px;font-size:12px;border-bottom:1px solid var(--border);vertical-align:middle;}
+.log-table tbody tr:hover,.user-table tbody tr:hover{background:var(--card-hover);}
+.log-table tbody tr:last-child td,.user-table tbody tr:last-child td{border-bottom:none;}
+.pill{display:inline-block;font-size:9px;font-weight:700;padding:3px 9px;border-radius:20px;text-transform:uppercase;letter-spacing:0.05em;}
+.pill-complete{background:rgba(34,197,94,0.1);color:#86efac;border:1px solid rgba(34,197,94,0.18);}
+.pill-pending{background:rgba(148,163,184,0.07);color:var(--text-secondary);border:1px solid var(--border);}
+.pill-steel{background:rgba(59,130,246,0.1);color:var(--blue-light);border:1px solid rgba(59,130,246,0.18);}
+.pill-hot{background:rgba(249,115,22,0.1);color:var(--hot-light);border:1px solid rgba(249,115,22,0.18);}
+
+/* ── MODAL ───────────────────────────────────────────────────── */
+.modal-overlay{position:fixed;inset:0;z-index:1500;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(8px);}
+.modal-overlay.hidden{display:none;}
+.modal{background:linear-gradient(145deg,var(--steel-mid),var(--steel-card));border:1px solid var(--border-strong);border-radius:var(--r-xl);padding:2rem;width:100%;max-width:400px;box-shadow:var(--shadow-lg);animation:slideUp 0.25s ease;}
+.modal h3{font-size:18px;font-weight:800;margin-bottom:5px;}
+.modal p{font-size:12px;color:var(--text-secondary);margin-bottom:1.25rem;line-height:1.6;}
+.jd-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:1rem;}
+.jd-card{background:rgba(255,255,255,0.03);border:1px solid var(--border-mid);padding:12px;border-radius:var(--r-sm);}
+.jd-label{font-size:9px;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px;font-weight:700;letter-spacing:0.05em;}
+.jd-val{font-size:13px;font-weight:600;color:var(--text-primary);line-height:1.4;}
+.jd-section{margin-top:1rem;border:1px solid var(--border);border-radius:var(--r-sm);overflow:hidden;background:var(--card-bg);}
+.jd-section-head{background:rgba(255,255,255,0.02);padding:10px 14px;font-weight:700;font-size:12px;border-bottom:1px solid var(--border);color:var(--text-primary);}
+.jd-item{padding:12px 14px;border-bottom:1px solid var(--border-mid);display:flex;flex-direction:column;gap:6px;font-size:12px;line-height:1.5;}
+.jd-item:last-child{border-bottom:none;}
+
+/* ── CHECKLIST EDITOR ────────────────────────────────────────── */
+.ce-item-row{display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;padding:10px;background:rgba(0,0,0,0.15);border:1px solid var(--border-mid);border-radius:var(--r-xs);}
+.ce-item-inputs{flex:1;display:flex;flex-direction:column;gap:6px;}
+.ce-item-inputs input,.ce-item-inputs select{width:100%;background:rgba(255,255,255,0.05);border:1px solid var(--border-mid);border-radius:var(--r-xs);padding:6px 10px;color:#fff;font-size:12px;outline:none;transition:border-color 0.2s;}
+.ce-item-inputs select option{background:var(--steel-mid);color:#fff;}
+.ce-item-inputs input:focus,.ce-item-inputs select:focus{border-color:var(--accent);}
+
+/* ── TOAST ───────────────────────────────────────────────────── */
+.toast{position:fixed;bottom:24px;right:24px;z-index:9999;background:var(--steel-light);border:1px solid var(--border-strong);border-radius:var(--r-md);padding:13px 17px;font-size:13px;display:flex;align-items:center;gap:11px;transform:translateY(90px);opacity:0;transition:all 0.3s cubic-bezier(.4,0,.2,1);box-shadow:var(--shadow-lg);max-width:360px;line-height:1.4;font-weight:500;}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast i{font-size:20px;flex-shrink:0;}
+.toast.success i{color:var(--success);}
+.toast.info i{color:var(--blue-light);}
+.toast.error i{color:var(--danger);}
+
+/* ── MOBILE NAV ──────────────────────────────────────────────── */
+.mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:150;background:rgba(8,15,24,0.98);border-top:1px solid rgba(255,255,255,0.07);padding:6px 0 max(6px,env(safe-area-inset-bottom));backdrop-filter:blur(20px);}
+.mobile-nav-inner{display:flex;justify-content:flex-start;gap:8px;overflow-x:auto;padding:0 1rem;scrollbar-width:none;}
+.mobile-nav-inner::-webkit-scrollbar{display:none;}
+.mob-tab{display:flex;flex-direction:column;align-items:center;gap:3px;padding:5px 14px;background:none;border:none;cursor:pointer;transition:all 0.15s;border-radius:var(--r-sm);flex-shrink:0;}
+.mob-tab i{font-size:22px;color:var(--text-muted);transition:all 0.15s;}
+.mob-tab span{font-size:9px;color:var(--text-muted);transition:color 0.15s;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;}
+.mob-tab.active i{color:var(--accent);}
+.mob-tab.active span{color:var(--accent);}
+.mob-tab.admin-only,.mob-tab.area-only{display:none;}
+
+/* ── RESPONSIVE ──────────────────────────────────────────────── */
+@media(max-width:768px){
+  .page{padding:1rem;padding-bottom:85px;}
+  .nav-center{display:none;}
+  .nav-right .user-info{display:none;}
+  .mobile-nav{display:block;}
+  .sig-row,.dash-row,.ladle-type-cards,.t-fields{grid-template-columns:1fr;}
+  .save-bar{margin:1rem -1rem -1rem;padding:11px 1rem;}
+  .dash-grid{grid-template-columns:repeat(2,1fr);}
+  .login-box{padding:1.5rem;}
+  .nav{padding:0 1rem;}
+  .nav-left .nav-brand{display:none;}
+  #sync-status{display:none;}
+  .role-cards{grid-template-columns:1fr;}
+  .session-chip .session-chip-inner{display:none;}
+  .session-chip{padding:5px 8px;}
+  .sync-btn .sb-label{display:none;}
+  .sync-btn{padding:5px 8px;}
+}
+
+/* ── CLOUD BLOCKED OVERLAY ───────────────────────────────────── */
+#cloud-block-overlay{position:fixed;inset:0;z-index:2000;display:flex;align-items:center;justify-content:center;padding:1.5rem;
+  background:rgba(5,10,18,0.97);backdrop-filter:blur(16px);}
+#cloud-block-overlay.hidden{display:none;}
+.cbo-box{text-align:center;max-width:420px;animation:slideUp 0.4s ease;}
+.cbo-icon{width:80px;height:80px;border-radius:50%;background:rgba(239,68,68,0.12);border:2px solid rgba(239,68,68,0.3);
+  display:inline-flex;align-items:center;justify-content:center;font-size:38px;color:var(--danger);margin-bottom:1.5rem;
+  box-shadow:0 0 40px rgba(239,68,68,0.15);}
+.cbo-title{font-size:22px;font-weight:800;margin-bottom:8px;color:var(--text-primary);}
+.cbo-sub{font-size:13px;color:var(--text-secondary);line-height:1.7;margin-bottom:1.75rem;}
+.cbo-retry-wrap{display:flex;flex-direction:column;align-items:center;gap:10px;}
+.cbo-retry-bar{width:100%;height:6px;background:rgba(255,255,255,0.06);border-radius:3px;overflow:hidden;}
+.cbo-retry-fill{height:100%;background:linear-gradient(90deg,var(--danger),#f97316);border-radius:3px;
+  transition:width 1s linear;}
+.cbo-retry-label{font-size:11px;color:var(--text-muted);font-family:var(--mono);}
+
+/* ── SESSION TIMER CHIP ──────────────────────────────────────── */
+.session-chip{display:flex;align-items:center;gap:6px;background:rgba(0,0,0,0.3);
+  border:1px solid var(--border-mid);border-radius:8px;padding:5px 10px;cursor:default;
+  position:relative;transition:border-color 0.2s;}
+.session-chip:hover{border-color:var(--border-strong);}
+.session-chip i{font-size:14px;color:var(--teal-light);}
+.session-chip-label{font-size:9px;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:0.07em;line-height:1;}
+.session-chip-time{font-size:13px;font-weight:700;font-family:var(--mono);color:var(--text-primary);line-height:1;}
+.session-chip-inner{display:flex;flex-direction:column;gap:2px;}
+/* Colour changes as session ages: green → amber → red */
+.session-chip.age-warn  .session-chip-time{color:var(--accent);}
+.session-chip.age-warn  i{color:var(--accent);}
+.session-chip.age-alert .session-chip-time{color:#fca5a5;}
+.session-chip.age-alert i{color:var(--danger);}
+/* Tooltip showing exact login time */
+.session-chip::after{content:attr(data-login);position:absolute;top:calc(100% + 6px);right:0;
+  background:var(--steel-light);border:1px solid var(--border-strong);border-radius:8px;
+  padding:6px 10px;font-size:11px;color:var(--text-secondary);white-space:nowrap;
+  pointer-events:none;opacity:0;transform:translateY(-4px);transition:all 0.15s;z-index:100;}
+.session-chip:hover::after{opacity:1;transform:translateY(0);}
+
+/* ── MANUAL SYNC BUTTON ──────────────────────────────────────── */
+.sync-btn{display:flex;align-items:center;gap:6px;background:rgba(0,0,0,0.25);
+  border:1.5px solid var(--border-mid);border-radius:8px;padding:5px 11px;
+  cursor:pointer;transition:all 0.2s;font-family:var(--font);}
+.sync-btn:hover{border-color:rgba(34,197,94,0.4);background:rgba(34,197,94,0.06);}
+.sync-btn:disabled{opacity:0.5;cursor:not-allowed;}
+.sync-btn i{font-size:15px;transition:color 0.2s;}
+.sync-btn .sb-label{font-size:10px;font-weight:700;color:var(--text-secondary);
+  text-transform:uppercase;letter-spacing:0.07em;transition:color 0.2s;}
+.sync-btn:hover .sb-label{color:var(--success);}
+.sync-btn:hover i{color:var(--success);}
+/* Toggle states */
+.sync-btn.sync-on  i{color:var(--success);}
+.sync-btn.sync-on  .sb-label{color:var(--success);}
+.sync-btn.sync-on{border-color:rgba(34,197,94,0.3);background:rgba(34,197,94,0.05);}
+.sync-btn.sync-off i{color:var(--text-muted);}
+.sync-btn.sync-off .sb-label{color:var(--text-muted);}
+.sync-btn.sync-spinning i{animation:spin 0.9s linear infinite;color:var(--accent);}
+
+@media print{
+  body{background:#fff !important;color:#000 !important;}
+  .nav,.mobile-nav,.save-bar,#login-screen,.btn,.phase-steps,.ladle-selector,.cl-header button,.dash-panel-head button{display:none !important;}
+  .page{display:block !important;padding:0 !important;margin:0 !important;max-width:100% !important;}
+  .timing-panel,.section-block,.meta-card,.progress-wrap{border:1px solid #ccc !important;background:transparent !important;page-break-inside:avoid;color:#000 !important;}
+  input,textarea,select{border:none !important;border-bottom:1px dashed #999 !important;background:transparent !important;color:#000 !important;}
+  *{-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;}
+}
+</style>
+</head>
+<body>
+
+<div id="cloud-block-overlay" class="hidden">
+  <div class="cbo-box">
+    <div class="cbo-icon"><i class="ti ti-cloud-off"></i></div>
+    <div class="cbo-title">Cloud Sync Failed</div>
+    <div class="cbo-sub">
+      The system could not connect to the cloud database.<br>
+      <strong>Login is disabled until the connection is restored.</strong><br>
+      This ensures data integrity and prevents conflicts.
+    </div>
+    <div class="cbo-retry-wrap">
+      <div style="width:100%;display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+        <span style="font-size:11px;color:var(--text-muted);">Retrying automatically…</span>
+        <span class="cbo-retry-label" id="cbo-countdown">30s</span>
+      </div>
+      <div class="cbo-retry-bar"><div class="cbo-retry-fill" id="cbo-retry-fill" style="width:100%"></div></div>
+      <button class="btn btn-ghost" style="margin-top:14px;width:100%;justify-content:center;" onclick="retryCloudNow()">
+        <i class="ti ti-refresh"></i> Retry Now
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="bg-particles" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+
+<div id="login-screen">
+  <div class="login-topbar">
+    <div class="login-topbar-brand">SMS TSK <span style="color:var(--accent);margin-left:5px;">v4.0</span></div>
+    <div id="login-sync-status"></div>
+  </div>
+
+  <div class="login-wrap">
+    <div class="login-brand">
+      <div class="login-brand-icon">
+        <div class="login-brand-ring"></div>
+        <i class="ti ti-tools"></i>
+      </div>
+      <h1>Mechanical Ladle Maintenance</h1>
+      <p>Multi-Role Tracking System</p>
+    </div>
+
+    <div class="login-box theme-area" id="login-box-container">
+      <div class="login-section-label">Select your role</div>
+      <div class="role-cards">
+        <div class="role-card rc-area active-area" id="rc-area" onclick="selectRole('area')">
+          <div class="role-card-icon"><i class="ti ti-hard-hat"></i></div>
+          <div class="role-card-label">Area Maint.</div>
+          <div class="role-card-sub">Ladle Job Creator</div>
+          <div class="role-check"><i class="ti ti-check"></i></div>
+        </div>
+        <div class="role-card rc-central" id="rc-central" onclick="selectRole('central')">
+          <div class="role-card-icon"><i class="ti ti-settings"></i></div>
+          <div class="role-card-label">Central Mech.</div>
+          <div class="role-card-sub">Inspector</div>
+          <div class="role-check"><i class="ti ti-check"></i></div>
+        </div>
+        <div class="role-card rc-admin" id="rc-admin" onclick="selectRole('admin')">
+          <div class="role-card-icon"><i class="ti ti-shield-lock"></i></div>
+          <div class="role-card-label">Admin</div>
+          <div class="role-card-sub">Manage System</div>
+          <div class="role-check"><i class="ti ti-check"></i></div>
+        </div>
+      </div>
+
+      <div class="login-section-label">Credentials</div>
+      <div id="login-err" class="login-err">
+        <i class="ti ti-alert-triangle"></i><span id="login-err-msg">Invalid credentials.</span>
+      </div>
+
+      <div class="field">
+        <label>Username</label>
+        <div class="input-wrap">
+          <i class="ti ti-user input-icon"></i>
+          <input type="text" id="un" placeholder="Enter your username" autocomplete="off" onkeydown="if(event.key==='Enter')doLogin()"/>
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:1.5rem;">
+        <label>Password</label>
+        <div class="input-wrap">
+          <i class="ti ti-lock input-icon"></i>
+          <input type="password" id="pw" placeholder="Enter your password" onkeydown="if(event.key==='Enter')doLogin()"/>
+        </div>
+      </div>
+
+      <button class="btn-login btn-login-area" id="login-btn" onclick="doLogin()">
+        <i class="ti ti-login" id="login-btn-icon"></i>
+        <span id="login-btn-text">Sign in as Area Maint.</span>
+      </button>
+
+      <div style="text-align:center;margin-top:1.1rem;">
+        <a href="#" onclick="openSignupRequest();return false;" style="font-size:12px;color:var(--text-secondary);text-decoration:none;border-bottom:1px dashed var(--border-strong);padding-bottom:1px;">
+          <i class="ti ti-user-plus" style="font-size:13px;vertical-align:-2px;margin-right:3px;"></i>Don't have an account? Request access
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="modal-adduser" class="modal-overlay hidden">
+  <div class="modal">
+    <h3>Create user account</h3>
+    <p>Set a username, password, and role for the new user.</p>
+    <div class="field"><label>Full Name</label><div class="input-wrap"><input type="text" id="nu-fullname" placeholder="e.g. Raj Kumar" autocomplete="off"/></div></div>
+    <div class="field"><label>Username (Login ID)</label><div class="input-wrap"><input type="text" id="nu-name" placeholder="e.g. operator_raj" autocomplete="off"/></div></div>
+    <div class="field"><label>Password</label><div class="input-wrap"><input type="password" id="nu-pass" placeholder="Min. 6 characters"/></div></div>
+    <div class="field">
+      <label>User Role</label>
+      <div class="input-wrap">
+        <select id="nu-role">
+          <option value="area">Area Maintenance (Ladle Job Creator)</option>
+          <option value="central">Central Mechanical (Inspector)</option>
+        </select>
+      </div>
+    </div>
+    <div id="nu-err" class="login-err" style="margin-bottom:0.75rem;"></div>
+    <div style="display:flex;gap:8px;margin-top:0.5rem;">
+      <button class="btn btn-teal" onclick="createUser()" style="flex:1;justify-content:center;"><i class="ti ti-user-plus"></i> Create user</button>
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div id="modal-edituser" class="modal-overlay hidden">
+  <div class="modal">
+    <h3>Edit user account</h3>
+    <p>Update credentials or role. Leave password blank to keep it unchanged.</p>
+    <input type="hidden" id="eu-original-username"/>
+    <div class="field"><label>Full Name</label><div class="input-wrap"><input type="text" id="eu-fullname" placeholder="e.g. Raj Kumar" autocomplete="off"/></div></div>
+    <div class="field"><label>Username (Login ID)</label><div class="input-wrap"><input type="text" id="eu-name" placeholder="e.g. operator_raj" autocomplete="off"/></div></div>
+    <div class="field"><label>New Password</label><div class="input-wrap"><input type="password" id="eu-pass" placeholder="Leave blank to keep current password"/></div></div>
+    <div class="field">
+      <label>User Role</label>
+      <div class="input-wrap">
+        <select id="eu-role">
+          <option value="area">Area Maintenance (Ladle Job Creator)</option>
+          <option value="central">Central Mechanical (Inspector)</option>
+          <option value="admin">Admin (Manage System)</option>
+        </select>
+      </div>
+    </div>
+    <div id="eu-err" class="login-err" style="margin-bottom:0.75rem;"></div>
+    <div style="display:flex;gap:8px;margin-top:0.5rem;">
+      <button class="btn btn-teal" onclick="saveEditUser()" style="flex:1;justify-content:center;"><i class="ti ti-device-floppy"></i> Save changes</button>
+      <button class="btn btn-ghost" onclick="closeEditUserModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div id="modal-signup-request" class="modal-overlay hidden">
+  <div class="modal">
+    <h3>Request account access</h3>
+    <p>Submit your details below. An administrator will review and approve your request before you can sign in.</p>
+    <div class="field"><label>Full Name</label><div class="input-wrap"><input type="text" id="sr-fullname" placeholder="e.g. Raj Kumar" autocomplete="off"/></div></div>
+    <div class="field"><label>Desired Username</label><div class="input-wrap"><input type="text" id="sr-username" placeholder="e.g. operator_raj" autocomplete="off"/></div></div>
+    <div class="field"><label>Desired Password</label><div class="input-wrap"><input type="password" id="sr-pass" placeholder="Min. 6 characters"/></div></div>
+    <div class="field">
+      <label>Requested Role</label>
+      <div class="input-wrap">
+        <select id="sr-role">
+          <option value="area">Area Maintenance (Ladle Job Creator)</option>
+          <option value="central">Central Mechanical (Inspector)</option>
+        </select>
+      </div>
+    </div>
+    <div id="sr-err" class="login-err" style="margin-bottom:0.75rem;"></div>
+    <div style="display:flex;gap:8px;margin-top:0.5rem;">
+      <button class="btn btn-teal" onclick="submitSignupRequest()" style="flex:1;justify-content:center;"><i class="ti ti-send"></i> Submit request</button>
+      <button class="btn btn-ghost" onclick="closeSignupRequestModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div id="modal-job-details" class="modal-overlay hidden">
+  <div class="modal" style="max-width:800px;width:95%;max-height:90vh;overflow-y:auto;padding:1.5rem;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+      <h3 style="margin:0;"><i class="ti ti-file-description" style="color:var(--accent);margin-right:8px;vertical-align:-2px;"></i>Job Details</h3>
+      <button class="btn btn-ghost btn-sm btn-icon" onclick="closeJobDetails()"><i class="ti ti-x"></i></button>
+    </div>
+    <div id="jd-content"></div>
+    <div style="margin-top:1.5rem;text-align:right;">
+      <button class="btn btn-ghost" onclick="closeJobDetails()">Close</button>
+    </div>
+  </div>
+</div>
+
+<div id="app">
+  <nav class="nav">
+    <div class="nav-left">
+      <div class="nav-logo"><i class="ti ti-tools"></i></div>
+      <div class="nav-brand">
+        <div class="nav-title">Ladle Maintenance <span style="font-size:9px;background:rgba(245,158,11,0.2);padding:2px 4px;border-radius:4px;color:var(--accent);margin-left:4px;">v4.0</span></div>
+        <div class="nav-sub">SMS TSK</div>
+      </div>
+    </div>
+    <div class="nav-center">
+      <button class="nav-tab area-only active" id="ntab-create" onclick="showPage('create',this,'mob-create')"><i class="ti ti-plus"></i> Create Job</button>
+      <button class="nav-tab" id="ntab-udash" onclick="showPage('udash',this,'mob-udash')"><i class="ti ti-activity"></i> Active Ladles</button>
+      <button class="nav-tab admin-only" id="ntab-dashboard" onclick="showPage('dashboard',this,'mob-dashboard')"><i class="ti ti-layout-dashboard"></i> Dashboard</button>
+      <button class="nav-tab admin-only" id="ntab-log" onclick="showPage('log',this,'mob-log')"><i class="ti ti-database"></i> Data Log</button>
+      <button class="nav-tab admin-only" id="ntab-users" onclick="showPage('users',this,'mob-users')"><i class="ti ti-users"></i> Users</button>
+      <button class="nav-tab admin-only" id="ntab-logins" onclick="showPage('logins',this,'mob-logins')"><i class="ti ti-history"></i> Logins</button>
+      <button class="nav-tab admin-only" id="ntab-settings" onclick="showPage('settings',this,'mob-settings')"><i class="ti ti-settings"></i> Settings</button>
+    </div>
+    <div class="nav-right">
+      <div class="live-clock"><i class="ti ti-clock" style="color:var(--accent);font-size:14px;"></i><span id="live-clock-text">--:--:--</span></div>
+
+      <div class="session-chip" id="session-chip" data-login="" title="Session duration">
+        <i class="ti ti-hourglass"></i>
+        <div class="session-chip-inner">
+          <span class="session-chip-label">Session</span>
+          <span class="session-chip-time" id="session-timer">00:00</span>
+        </div>
+      </div>
+
+      <div class="user-chip">
+        <div class="user-avatar ua-area" id="nav-avatar">U</div>
+        <div class="user-info">
+          <div class="user-name" id="nav-username">User</div>
+          <span class="role-badge rb-area" id="nav-role-badge">Area Maint</span>
+        </div>
+      </div>
+
+      <div id="sync-status"></div>
+      <button class="btn btn-ghost btn-sm" onclick="logout()"><i class="ti ti-logout"></i> <span class="hide-xs">Sign out</span></button>
+    </div>
+  </nav>
+
+  <div class="mobile-nav">
+    <div class="mobile-nav-inner">
+      <button class="mob-tab area-only active" id="mob-create" onclick="showPage('create',document.getElementById('ntab-create'),this)"><i class="ti ti-plus"></i><span>Create</span></button>
+      <button class="mob-tab" id="mob-udash" onclick="showPage('udash',document.getElementById('ntab-udash'),this)"><i class="ti ti-activity"></i><span>Active</span></button>
+      <button class="mob-tab admin-only" id="mob-dashboard" onclick="showPage('dashboard',document.getElementById('ntab-dashboard'),this)"><i class="ti ti-layout-dashboard"></i><span>Dash</span></button>
+      <button class="mob-tab admin-only" id="mob-log" onclick="showPage('log',document.getElementById('ntab-log'),this)"><i class="ti ti-database"></i><span>Data</span></button>
+      <button class="mob-tab admin-only" id="mob-users" onclick="showPage('users',document.getElementById('ntab-users'),this)"><i class="ti ti-users"></i><span>Users</span></button>
+      <button class="mob-tab admin-only" id="mob-logins" onclick="showPage('logins',document.getElementById('ntab-logins'),this)"><i class="ti ti-history"></i><span>Logins</span></button>
+      <button class="mob-tab admin-only" id="mob-settings" onclick="showPage('settings',document.getElementById('ntab-settings'),this)"><i class="ti ti-settings"></i><span>Settings</span></button>
+    </div>
+  </div>
+
+  <div id="page-create" class="page active">
+    <div class="phase-steps">
+      <div class="phase-step ps-active"><div class="phase-step-num">1</div><span>Create Job (Area)</span></div>
+      <div class="phase-connector"></div>
+      <div class="phase-step ps-idle"><div class="phase-step-num">2</div><span>Inspect (Central)</span></div>
+      <div class="phase-connector"></div>
+      <div class="phase-step ps-idle"><div class="phase-step-num">3</div><span>Receive (Area)</span></div>
+    </div>
+
+    <div class="ladle-selector">
+      <div class="ladle-selector-label">Step 1 — Select ladle type</div>
+      <div class="ladle-type-cards">
+        <div class="ladle-type-card ltc-steel" id="ltc-steel" onclick="selectLadleType('steel')">
+          <div class="lt-check"><i class="ti ti-check"></i></div>
+          <div class="ladle-type-icon"><i class="ti ti-bucket"></i></div>
+          <div class="ladle-type-name">Steel Ladle</div>
+        </div>
+        <div class="ladle-type-card ltc-hot" id="ltc-hot" onclick="selectLadleType('hot')">
+          <div class="lt-check"><i class="ti ti-check"></i></div>
+          <div class="ladle-type-icon"><i class="ti ti-flame"></i></div>
+          <div class="ladle-type-name">Hot Metal Ladle</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="meta-strip" style="display:none;" id="create-meta">
+      <div class="meta-card">
+        <label>Ladle No.</label>
+        <input id="m-ladle" placeholder="e.g. 07" inputmode="numeric" oninput="this.value=this.value.replace(/[^0-9]/g,'');"/>
+      </div>
+      <div class="meta-card">
+        <label>Shift</label>
+        <select id="m-shift">
+          <option value="" disabled selected>Select Shift</option>
+          <option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="G">G</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="create-checklist-wrap" style="display:none;margin-top:1.25rem;">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted);margin-bottom:10px;display:flex;align-items:center;gap:8px;">
+        <i class="ti ti-clipboard-check" style="color:var(--accent);"></i> Create Job Checklist (Area Maint.)
+        <span style="flex:1;height:1px;background:var(--border);display:block;"></span>
+      </div>
+      <div id="create-cl-sections"></div>
+    </div>
+
+    <div class="save-bar" style="display:none;" id="create-save">
+      <div class="save-info">Issue this ladle to Central Mechanical Maintenance.</div>
+      <button class="btn btn-blue" onclick="createJob()"><i class="ti ti-send"></i> Create &amp; Send to Central</button>
+    </div>
+  </div>
+
+  <div id="page-udash" class="page">
+    <div class="page-header">
+      <div><h1>Active Ladles</h1><p>Ongoing maintenance jobs pending completion</p></div>
+    </div>
+    <div id="udash-content"></div>
+  </div>
+
+  <div id="page-workspace" class="page">
+    <div class="phase-steps" id="ws-phase-steps">
+      <div class="phase-step ps-done" id="ps1"><div class="phase-step-num"><i class="ti ti-check"></i></div><span>Created</span></div>
+      <div class="phase-connector conn-done" id="pc1"></div>
+      <div class="phase-step ps-active" id="ps2"><div class="phase-step-num">2</div><span>Inspection (Central)</span></div>
+      <div class="phase-connector" id="pc2"></div>
+      <div class="phase-step ps-idle" id="ps3"><div class="phase-step-num">3</div><span>Receive (Area)</span></div>
+    </div>
+
+    <div id="phase-inspection" style="display:none;">
+      <div class="cl-header">
+        <div>
+          <div class="cl-type-badge ctb-steel" id="ws-type-badge"><i class="ti ti-bucket"></i> Steel Ladle</div>
+          <h2 style="font-size:18px;font-weight:700;margin-top:6px;">Central Mech. Inspection</h2>
+          <p style="font-size:12px;color:var(--text-secondary);">Fill inspection details and declare completion</p>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="closeWorkspace()"><i class="ti ti-arrow-left"></i> Back</button>
+      </div>
+      <div class="timing-panel recv">
+        <span class="timing-badge badge-recv"><i class="ti ti-arrow-bar-to-down"></i> Central Mech Receiving</span>
+        <div class="t-fields">
+          <div class="t-field"><label>Received by (Central Mech)</label><input type="text" id="r-by" placeholder="Name"/></div>
+          <div class="t-field"><label>Personal No.</label><input type="text" id="r-personal" placeholder="Pers. No."/></div>
+        </div>
+      </div>
+      <div class="progress-wrap">
+        <div class="progress-header">
+          <span class="progress-label"><i class="ti ti-chart-line" style="margin-right:5px;color:var(--accent);"></i>Inspection progress</span>
+          <span class="progress-pct" id="pct-label">0%</span>
+        </div>
+        <div class="progress-track"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+      </div>
+      <div id="cl-sections"></div>
+      <div class="sig-card teal-sig" style="margin-top:1.25rem;">
+        <div class="sc-label"><i class="ti ti-tool" style="margin-right:5px;"></i>Central Mechanical Sign-off</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <input id="sig-cm-name" placeholder="Name"/>
+          <input id="sig-cm-desig" placeholder="Designation"/>
+        </div>
+      </div>
+      <div class="save-bar">
+        <div class="save-info">Fill out all checkpoint details to save progress. Submit when done.</div>
+        <button class="btn btn-ghost" onclick="saveProgress()"><i class="ti ti-device-floppy"></i> Save Progress</button>
+        <button class="btn btn-teal" onclick="declareCompletion()"><i class="ti ti-check"></i> Declare Job Completion</button>
+      </div>
+    </div>
+
+    <div id="phase-acceptance" style="display:none;">
+      <div class="cl-header">
+        <div>
+          <div class="cl-type-badge ctb-steel" id="ws-accept-type-badge"><i class="ti ti-bucket"></i> Steel Ladle</div>
+          <h2 style="font-size:18px;font-weight:700;margin-top:6px;">Receive Completed Ladle</h2>
+          <p style="font-size:12px;color:var(--text-secondary);">Review Central Mechanical's completed inspection, then sign off to close the job.</p>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="closeWorkspace()"><i class="ti ti-arrow-left"></i> Back</button>
+      </div>
+
+      <div style="background:rgba(34,197,94,0.04);border:1px solid rgba(34,197,94,0.2);border-radius:var(--r-md);padding:14px 16px;margin-bottom:1.25rem;display:flex;align-items:center;gap:12px;">
+        <div style="width:38px;height:38px;border-radius:50%;background:rgba(34,197,94,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <i class="ti ti-circle-check" style="font-size:22px;color:var(--success);"></i>
+        </div>
+        <div>
+          <div style="font-size:13px;font-weight:700;color:#86efac;">Inspection Declared Complete by Central Mechanical</div>
+          <div style="font-size:11px;color:var(--text-secondary);margin-top:2px;">Review the checklist below before accepting the ladle.</div>
+        </div>
+      </div>
+
+      <div style="margin-bottom:1.25rem;">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted);margin-bottom:10px;display:flex;align-items:center;gap:8px;">
+          <i class="ti ti-list-check" style="color:var(--accent);"></i> Completed Inspection Summary
+          <span style="flex:1;height:1px;background:var(--border);display:block;"></span>
+        </div>
+        <div id="accept-checklist-review"></div>
+      </div>
+
+      <div class="timing-panel hndv">
+        <span class="timing-badge badge-hndv"><i class="ti ti-arrow-bar-up"></i> Area Maint Acceptance</span>
+        <div class="t-fields">
+          <div class="t-field"><label>Accepted by (Area Maint)</label><input type="text" id="h-by" placeholder="Name"/></div>
+          <div class="t-field"><label>Personal No.</label><input type="text" id="h-personal" placeholder="Pers. No."/></div>
+        </div>
+      </div>
+
+      <div class="sig-card blue-sig" style="margin-top:1.25rem;">
+        <div class="sc-label"><i class="ti ti-user" style="margin-right:5px;"></i>Area Maintenance Sign-off</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <input id="hndv-sig-am-name" placeholder="Name"/>
+          <input id="hndv-sig-am-desig" placeholder="Designation"/>
+        </div>
+      </div>
+
+      <div class="save-bar">
+        <div class="save-info">Review checklist above, then sign off to receive the ladle.</div>
+        <button class="btn btn-blue" onclick="receiveLadle()"><i class="ti ti-send"></i> Receive Ladle &amp; Close Job</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="page-dashboard" class="page">
+    <div class="page-header"><div><h1>Dashboard</h1></div></div>
+    <div class="dash-grid" id="dash-kpi"></div>
+  </div>
+
+  <div id="page-log" class="page">
+    <div class="page-header"><div><h1>Data Log</h1></div></div>
+    <div class="table-wrap">
+      <table class="log-table">
+        <thead><tr><th>Job ID</th><th>Type</th><th>Ladle</th><th>Shift</th><th>Phase</th><th>Created By</th><th>CM Duration</th><th>Total Duration</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody id="log-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="page-users" class="page">
+    <div class="page-header">
+      <div><h1>Users</h1></div>
+      <button class="btn btn-teal" onclick="openAddUser()"><i class="ti ti-plus"></i> Add User</button>
+    </div>
+
+    <div id="pending-requests-panel" style="display:none;margin-bottom:1.5rem;">
+      <div class="dash-panel">
+        <div class="dash-panel-head"><span><i class="ti ti-user-question" style="color:var(--accent);margin-right:6px;"></i> Pending Access Requests</span></div>
+        <div class="dash-panel-body" style="padding:0;">
+          <div class="table-wrap" style="margin:0;">
+            <table class="user-table">
+              <thead><tr><th>Requested Username</th><th>Name</th><th>Requested Role</th><th>Submitted</th><th>Action</th></tr></thead>
+              <tbody id="pending-requests-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table class="user-table">
+        <thead><tr><th>Username</th><th>Name</th><th>Role</th><th>Action</th></tr></thead>
+        <tbody id="users-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="page-logins" class="page">
+    <div class="page-header"><div><h1>Login History</h1><p>Recent user authentications</p></div></div>
+    <div class="table-wrap">
+      <table class="log-table">
+        <thead><tr><th>Timestamp</th><th>Username</th><th>Role</th><th>Status</th><th>Session Time</th></tr></thead>
+        <tbody id="logins-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="page-settings" class="page">
+    <div class="page-header"><div><h1>System Settings</h1></div></div>
+    <div class="dash-row" style="align-items:start;">
+      <div class="dash-panel">
+        <div class="dash-panel-head"><span><i class="ti ti-list-check" style="color:var(--accent);margin-right:6px;"></i> Checklist Editor</span></div>
+        <div class="dash-panel-body">
+          <div class="input-wrap" style="margin-bottom:1rem;">
+            <i class="ti ti-bucket input-icon"></i>
+            <select id="ce-type" onchange="renderChecklistEditor()">
+              <option value="steel">Steel Ladle</option>
+              <option value="hot">Hot Metal Ladle</option>
+              <option value="createJob">Create Job Checklist (Area)</option>
+            </select>
+          </div>
+          <div id="ce-sections"></div>
+          <div style="display:flex;gap:8px;margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border);">
+            <button class="btn btn-ghost" onclick="ceAddSection()"><i class="ti ti-plus"></i> Add Section</button>
+            <button class="btn btn-teal" onclick="ceSave()"><i class="ti ti-device-floppy"></i> Save Checklist</button>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div class="dash-panel">
+          <div class="dash-panel-head"><span><i class="ti ti-settings" style="color:var(--blue-light);margin-right:6px;"></i> General Settings</span></div>
+          <div class="dash-panel-body" style="display:flex;flex-direction:column;gap:1rem;">
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;">
+              <input type="checkbox" id="set-maint" onchange="toggleMaintMode()" style="width:16px;height:16px;accent-color:var(--accent);"/>
+              Maintenance Mode (Block non-admin logins)
+            </label>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(255,255,255,0.03);border:1px solid var(--border-mid);border-radius:var(--r-sm);">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <i class="ti ti-cloud" style="font-size:17px;color:var(--text-muted);"></i>
+                <div>
+                  <div style="font-size:13px;font-weight:600;color:var(--text-primary);">Cloud Sync</div>
+                  <div style="font-size:11px;color:var(--text-muted);">Sync data to cloud database in real-time</div>
+                </div>
+              </div>
+              <button class="sync-btn sync-on" id="sync-toggle-btn" onclick="toggleCloudSync()" title="Toggle cloud sync on/off">
+                <i class="ti ti-cloud-check" id="sync-toggle-icon"></i>
+                <span class="sb-label" id="sync-toggle-label">Sync ON</span>
+              </button>
+            </div>
+            <button class="btn btn-ghost" onclick="exportDB()"><i class="ti ti-download"></i> Export DB (JSON)</button>
+          </div>
+        </div>
+        <div class="dash-panel">
+          <div class="dash-panel-head"><span><i class="ti ti-database" style="color:var(--danger);margin-right:6px;"></i> Database Management</span></div>
+          <div class="dash-panel-body">
+            <p style="font-size:11px;color:var(--text-secondary);margin-bottom:1rem;line-height:1.5;">
+              Permanently erase all job records, checklists, and user data from the cloud database. <strong>Requires master password.</strong>
+            </p>
+            <button class="btn btn-danger-soft" onclick="promptWipeCloud()"><i class="ti ti-trash"></i> Erase Cloud Data</button>
+          </div>
+        </div>
+        <div class="dash-panel">
+          <div class="dash-panel-head"><span><i class="ti ti-chart-donut" style="color:var(--teal-light);margin-right:6px;"></i> Cloud Storage Usage</span></div>
+          <div class="dash-panel-body">
+            <div style="display:flex;align-items:center;justify-content:center;gap:2rem;flex-wrap:wrap;">
+              <canvas id="storage-donut" width="140" height="140" style="flex-shrink:0;"></canvas>
+              <div id="storage-legend" style="display:flex;flex-direction:column;gap:10px;min-width:140px;"></div>
+            </div>
+            <div id="storage-bar-wrap" style="margin-top:1.25rem;">
+              <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-bottom:5px;">
+                <span>Used</span><span id="storage-pct-label">0%</span>
+              </div>
+              <div style="height:8px;background:rgba(255,255,255,0.06);border-radius:4px;overflow:hidden;">
+                <div id="storage-bar-fill" style="height:100%;border-radius:4px;background:linear-gradient(90deg,#0d9488,#22c55e);transition:width 0.6s ease;width:0%;"></div>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-muted);margin-top:4px;">
+                <span id="storage-used-label">— KB used</span>
+                <span id="storage-total-label">Limit: 1 GB</span>
+              </div>
+            </div>
+            <button class="btn btn-ghost btn-sm" style="margin-top:1rem;width:100%;justify-content:center;" onclick="renderStorageGraph()">
+              <i class="ti ti-refresh"></i> Refresh
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast success"><i class="ti ti-circle-check"></i><span id="toast-msg">Saved.</span></div>
+
+<script>
+'use strict';
+// ══════════════════════════════════════════════════════════════════
+// CONSTANTS & CONFIG
+// ══════════════════════════════════════════════════════════════════
+const FIREBASE_URL   = 'https://ladle-checklist-default-rtdb.asia-southeast1.firebasedatabase.app/data.json';
+const LOCAL_KEY      = 'lm_cloud_backup_v4';
+const MAX_LOGIN_LOG  = 100;
+const WIPE_MASTER_PW = '12345678';
+
+// Cloud sync retry config (Feature 1)
+const RETRY_INTERVAL_S = 30;   // auto-retry every 30 s when blocked
+
+const DEFAULT_CHECKLISTS = {
+  steel:[
+    {icon:'ti-search',title:'Pre-maintenance inspection',items:[
+      {label:'Verify ladle identity number and job card match',type:'text'},
+      {label:'Inspect exterior shell for cracks, deformation, or hot spots',type:'select',options:'OK,Minor Issue,Critical'},
+      {label:'Check ladle lining — note any spalling, erosion, or skull buildup',type:'textarea'},
+      {label:'Inspect trunnions and trunnion pins for wear or cracks',type:'select',options:'OK,Requires Repair'}
+    ]},
+    {icon:'ti-tool',title:'Mechanical components',items:[
+      {label:'Inspect and lubricate trunnion bearing housings',type:'text'},
+      {label:'Check bail arm and pins',type:'text'},
+      {label:'Check hydraulic cylinders',type:'text'}
+    ]},
+    {icon:'ti-settings',title:'Slide gate & nozzle system',items:[
+      {label:'Disassemble and clean slide gate',type:'textarea'},
+      {label:'Inspect collector nozzles',type:'text'},
+      {label:'Check slide gate plates',type:'select',options:'Good,Needs Replacement'}
+    ]}
+  ],
+  hot:[
+    {icon:'ti-search',title:'Pre-maintenance inspection',items:[
+      {label:'Verify hot metal ladle identity',type:'text'},
+      {label:'Inspect exterior shell',type:'text'},
+      {label:'Check ladle lining erosion',type:'textarea'},
+      {label:'Inspect trunnion rings',type:'select',options:'OK,Requires Repair'}
+    ]},
+    {icon:'ti-tool',title:'Structural check',items:[
+      {label:'Inspect trunnion bearing housings',type:'text'},
+      {label:'Check trunnion ring welds',type:'text'},
+      {label:'Inspect ladle bail',type:'text'}
+    ]}
+  ],
+  createJob:[
+    {icon:'ti-clipboard-check',title:'Pre-issue checks (Area Maint.)',items:[
+      {label:'Visual condition of ladle before issue',type:'select',options:'Good,Fair,Poor'},
+      {label:'Confirm ladle number matches job card',type:'text'},
+      {label:'Any visible damage or leakage noted',type:'textarea'},
+      {label:'Safety guards / fittings in place',type:'select',options:'Yes,No,N/A'}
+    ]}
+  ]
+};
+
+// ══════════════════════════════════════════════════════════════════
+// GLOBAL STATE
+// ══════════════════════════════════════════════════════════════════
+let _cloudCache   = null;
+let _draft        = null;
+let _saveDBTimer  = null;
+let _toastTimer   = null;
+
+// Feature 1 — Cloud sync guard
+let _cloudOnline      = false;   // true only after a successful cloudRead
+let _cloudSyncEnabled = true;    // manual toggle (Feature 3)
+let _retryTimer       = null;    // auto-retry interval id
+let _retryCountdown   = RETRY_INTERVAL_S;
+
+// Feature 2 — Session timer
+let _loginTime        = null;    // Date when the current user logged in
+let _sessionTimer     = null;    // setInterval id
+
+let currentRole     = '';
+let currentUser     = '';
+let currentFullName = '';
+let selectedRole    = 'area';
+let currentLadleType= '';
+let activeJobId     = null;
+let checkState      = {};
+let totalItems      = 0;
+let createCheckState = {};   // Feature: Create Job Checklist state (Area Maint, at job creation)
+
+// ══════════════════════════════════════════════════════════════════
+// UTILITIES
+// ══════════════════════════════════════════════════════════════════
+
+/** XSS-safe HTML escaping */
+function escapeHTML(str) {
+  if (typeof str !== 'string') return str ?? '';
+  return str.replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+}
+
+/** Format ms duration as "Xh Ym" or "Zm" */
+function formatDuration(startISO, endISO) {
+  if (!startISO || !endISO) return '—';
+  const ms = new Date(endISO) - new Date(startISO);
+  if (ms < 0) return '—';
+  const totalMins = Math.floor(ms / 60000);
+  const hrs  = Math.floor(totalMins / 60);
+  const mins = totalMins % 60;
+  return hrs > 0 ? `${hrs}h ${mins}m` : `${mins}m`;
+}
+
+/** Live clock — update once per second */
+setInterval(() => {
+  const el = document.getElementById('live-clock-text');
+  if (el) el.textContent = new Date().toLocaleString('en-IN', {hour12:true,hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}, 1000);
+
+// ══════════════════════════════════════════════════════════════════
+// CLOUD SYNC ENGINE
+// ══════════════════════════════════════════════════════════════════
+async function cloudRead() {
+  if (!_cloudSyncEnabled) return null;
+  try {
+    const r = await fetch(`${FIREBASE_URL}?_t=${Date.now()}`, { cache: 'no-store' });
+    if (!r.ok) return false; // Return 'false' for actual HTTP errors (401, 404, etc.)
+    const data = await r.json();
+    return data; // Let 'null' pass through (Firebase's response for an empty DB)
+  } catch { return false; } // Return 'false' for network/connection failures
+}
+
+async function cloudWrite(data) {
+  if (!_cloudSyncEnabled) return false;
+  try {
+    // FIX: Using PATCH instead of PUT. 
+    // This merges updates at the top level rather than deleting missing keys.
+    const r = await fetch(`${FIREBASE_URL}?_t=${Date.now()}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+      cache: 'no-store'
+    });
+    return r.ok;
+  } catch { return false; }
+}
+
+/** Debounced write — saves locally immediately, pushes to cloud after 1 s idle */
+function saveDB() {
+  if (!_cloudCache) return;
+  
+  // Wrap in try-catch to prevent 5MB browser limit from breaking cloud sync
+  try {
+    localStorage.setItem(LOCAL_KEY, JSON.stringify(_cloudCache));
+  } catch (e) {
+    console.warn("Local cache full. Proceeding with cloud sync only.");
+  }
+  
+  if (!_cloudSyncEnabled) return;
+  
+  clearTimeout(_saveDBTimer);
+  showSyncStatus('syncing');
+  _saveDBTimer = setTimeout(async () => {
+    const ok = await cloudWrite(_cloudCache);
+    if (ok) {
+      _cloudOnline = true;
+      showSyncStatus('online');
+    } else {
+      showSyncStatus('error');
+      showToast('⚠️ Cloud sync failed. Data saved locally.', 'error');
+    }
+  }, 1000);
+}
+
+/** Normalise / migrate a raw DB record */
+function normaliseDB(data) {
+  // 1. If there is NO data at all (brand new Firebase DB), initialize defaults
+  if (!data) {
+    return {
+      lm_log_v2:   [],
+      lm_users_v2: [{username:'admin',password:'admin',role:'admin',fullname:'Administrator'}],
+      checklists:  JSON.parse(JSON.stringify(DEFAULT_CHECKLISTS)),
+      loginHistory:[],
+      signupRequests: [],
+      settings:    {maintenanceMode:false}
+    };
+  }
+  
+  // 2. Firebase strips empty arrays. If they are missing, safely put them back.
+  if (!data.lm_log_v2)    data.lm_log_v2 = [];
+  if (!data.lm_users_v2)  data.lm_users_v2 = [{username:'admin',password:'admin',role:'admin',fullname:'Administrator'}];
+  if (!data.loginHistory) data.loginHistory = [];
+  if (!data.signupRequests) data.signupRequests = [];
+  if (!data.settings)     data.settings = {maintenanceMode:false};
+
+  // 3. Handle Checklist normalisation
+  if (!data.checklists) {
+    data.checklists = JSON.parse(JSON.stringify(DEFAULT_CHECKLISTS));
+  } else {
+    ['steel','hot','createJob'].forEach(type => {
+      if (!data.checklists[type]) return;
+      data.checklists[type] = data.checklists[type].map(sec => {
+        if (sec.items?.length && typeof sec.items[0] === 'string') {
+          sec.items = sec.items.map(str => ({label:str, type:sec.isRemarks?'textarea':'text', options:''}));
+        }
+        return sec;
+      });
+    });
+    // Backfill createJob checklist for databases created before this feature existed
+    if (!data.checklists.createJob) {
+      data.checklists.createJob = JSON.parse(JSON.stringify(DEFAULT_CHECKLISTS.createJob));
+    }
+  }
+  
+  return data;
+}
+
+// ── FEATURE 1: Cloud-blocked login ───────────────────────────────
+/** Show / hide the cloud-blocked overlay and start auto-retry countdown */
+function setCloudBlocked(blocked) {
+  const overlay = document.getElementById('cloud-block-overlay');
+  if (blocked) {
+    overlay.classList.remove('hidden');
+    startRetryCountdown();
+  } else {
+    overlay.classList.add('hidden');
+    stopRetryCountdown();
+  }
+}
+
+function startRetryCountdown() {
+  stopRetryCountdown();
+  _retryCountdown = RETRY_INTERVAL_S;
+  updateRetryUI();
+  _retryTimer = setInterval(() => {
+    _retryCountdown--;
+    updateRetryUI();
+    if (_retryCountdown <= 0) retryCloudNow();
+  }, 1000);
+}
+
+function stopRetryCountdown() {
+  clearInterval(_retryTimer);
+  _retryTimer = null;
+}
+
+function updateRetryUI() {
+  const cd = document.getElementById('cbo-countdown');
+  const rf = document.getElementById('cbo-retry-fill');
+  if (cd) cd.textContent = `${_retryCountdown}s`;
+  if (rf) rf.style.width = `${(_retryCountdown / RETRY_INTERVAL_S) * 100}%`;
+}
+
+async function retryCloudNow() {
+  stopRetryCountdown();
+  const cd = document.getElementById('cbo-countdown');
+  if (cd) cd.textContent = 'Trying…';
+  showSyncStatus('syncing');
+
+  const data = await cloudRead();
+  if (data !== false) {
+    _cloudCache  = normaliseDB(data);
+    _cloudOnline = true;
+    try { localStorage.setItem(LOCAL_KEY, JSON.stringify(_cloudCache)); } catch(e) {}
+    const sm = document.getElementById('set-maint');
+    if (sm) sm.checked = _cloudCache.settings.maintenanceMode;
+    setCloudBlocked(false);
+    showSyncStatus('online');
+    showToast('Cloud connection restored. You can now log in.', 'success');
+  } else {
+    showSyncStatus('error');
+    _retryCountdown = RETRY_INTERVAL_S;
+    startRetryCountdown();
+  }
+}
+
+// ── FEATURE 3: Manual sync toggle ────────────────────────────────
+function toggleCloudSync() {
+  _cloudSyncEnabled = !_cloudSyncEnabled;
+  updateSyncToggleUI();
+
+  if (_cloudSyncEnabled) {
+    // Re-enable: attempt an immediate sync
+    showToast('Cloud sync enabled — reconnecting…', 'info');
+    retryCloudNow().then(() => {
+      if (_cloudOnline) showToast('Cloud sync active.', 'success');
+    });
+  } else {
+    showSyncStatus('offline');
+    showToast('Cloud sync paused. Running in local-only mode.', 'info');
+    setCloudBlocked(false); // let user work offline if they manually disabled sync
+  }
+}
+
+function updateSyncToggleUI() {
+  const btn   = document.getElementById('sync-toggle-btn');
+  const icon  = document.getElementById('sync-toggle-icon');
+  const label = document.getElementById('sync-toggle-label');
+  if (!btn) return;
+  if (_cloudSyncEnabled) {
+    btn.className  = 'sync-btn sync-on';
+    icon.className = 'ti ti-cloud-check';
+    label.textContent = 'Sync ON';
+  } else {
+    btn.className  = 'sync-btn sync-off';
+    icon.className = 'ti ti-cloud-off';
+    label.textContent = 'Sync OFF';
+  }
+}
+
+async function initCloudSync() {
+  showSyncStatus('syncing');
+  const data = await cloudRead();
+
+  // Explicitly check for 'false' (error) rather than falsy
+  if (data === false) {
+    // FIX: Attempt to load from local backup instead of outright failing
+    const localData = localStorage.getItem(LOCAL_KEY);
+    if (localData) {
+      try {
+        _cloudCache = JSON.parse(localData);
+        _cloudOnline = false; // We are offline, but have local data
+        showSyncStatus('offline');
+        setCloudBlocked(false);
+        showToast('Offline mode active. Using local data.', 'info');
+        
+        // Restore maintenance toggle state from local cache
+        const sm = document.getElementById('set-maint');
+        if (sm) sm.checked = _cloudCache.settings?.maintenanceMode || false;
+        return;
+      } catch (e) {
+        console.error("Failed to parse local backup", e);
+      }
+    }
+    
+    // Only block if there is NO cloud connection AND NO local backup
+    showSyncStatus('error');
+    setCloudBlocked(true);
+    return; 
+  }
+
+  _cloudOnline = true;
+  _cloudCache  = normaliseDB(data);
+  
+  try { localStorage.setItem(LOCAL_KEY, JSON.stringify(_cloudCache)); } catch(e) {}
+  
+  const sm = document.getElementById('set-maint');
+  if (sm) sm.checked = _cloudCache.settings.maintenanceMode;
+  showSyncStatus('online');
+  setCloudBlocked(false);
+}
+
+// ── Accessors ────────────────────────────────────────────────────
+function getLog()       { return _cloudCache?.lm_log_v2   ?? []; }
+function saveLog(log)   { if (_cloudCache) { _cloudCache.lm_log_v2   = log; saveDB(); } }
+function getUsers()     { return _cloudCache?.lm_users_v2 ?? [{username:'admin',password:'admin',role:'admin',fullname:'Administrator'}]; }
+function saveUsers(u)   { if (_cloudCache) { _cloudCache.lm_users_v2 = u;   saveDB(); } }
+function getSignupRequests()   { return _cloudCache?.signupRequests ?? []; }
+function saveSignupRequests(r) { if (_cloudCache) { _cloudCache.signupRequests = r; saveDB(); } }
+
+function showSyncStatus(state) {
+  const icons   = {syncing:'ti-refresh', online:'ti-cloud-check', error:'ti-cloud-off', offline:'ti-cloud-pause'};
+  const colors  = {syncing:'#f59e0b',    online:'#22c55e',        error:'#ef4444',      offline:'#7d93ad'};
+  const labels  = {syncing:'Syncing…',   online:'Cloud Active',   error:'Cloud Error',  offline:'Sync Paused'};
+  const spinStyle = state === 'syncing' ? 'animation:spin 1s linear infinite;' : '';
+  const html = `<i class="ti ${icons[state]??'ti-cloud'}" style="color:${colors[state]??'#7d93ad'};font-size:15px;${spinStyle}"></i>
+                <span style="font-size:11px;color:var(--text-secondary);font-weight:600;">${labels[state]??state}</span>`;
+  ['sync-status','login-sync-status'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = html;
+  });
+}
+
+// ══════════════════════════════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════════════════════════════
+function showToast(msg, type = 'success') {
+  const t     = document.getElementById('toast');
+  const icon  = t.querySelector('i');
+  const icons = {success:'ti-circle-check', error:'ti-alert-circle', info:'ti-info-circle'};
+  document.getElementById('toast-msg').textContent = msg;
+  t.className = `toast ${type}`;
+  icon.className = `ti ${icons[type] ?? icons.info}`;
+  clearTimeout(_toastTimer);
+  t.classList.add('show');
+  _toastTimer = setTimeout(() => t.classList.remove('show'), 4000);
+}
+
+// ══════════════════════════════════════════════════════════════════
+// AUTHENTICATION
+// BUG FIX #5: logout now clears currentFullName
+// ══════════════════════════════════════════════════════════════════
+function selectRole(r) {
+  selectedRole = r;
+  document.querySelectorAll('.role-card').forEach(el => el.classList.remove('active-area','active-central','active-admin'));
+  document.getElementById(`rc-${r}`).classList.add(`active-${r}`);
+  const btn = document.getElementById('login-btn');
+  const labels = {area:'Sign in as Area Maint.',central:'Sign in as Central Mech.',admin:'Sign in as Admin'};
+  const btnIcons = {area:'ti-hard-hat',central:'ti-settings',admin:'ti-shield-lock'};
+  btn.className = `btn-login btn-login-${r}`;
+  document.getElementById('login-btn-text').textContent = labels[r];
+  document.getElementById('login-btn-icon').className   = `ti ${btnIcons[r]}`;
+  document.getElementById('login-box-container').className = `login-box theme-${r}`;
+  document.getElementById('login-err').style.display = 'none';
+}
+
+/** BUG FIX #6: recordLogin uses the actual matched user's role, not the UI selectedRole */
+function recordLogin(user, statusStr) {
+  if (!_cloudCache) return;
+  _cloudCache.loginHistory.unshift({
+    ts:        new Date().toISOString(),
+    user:      user?.username ?? 'Unknown',
+    role:      user?.role     ?? selectedRole,
+    status:    statusStr,
+    loginTs:   statusStr === 'Success' ? new Date().toISOString() : null,
+    sessionDur: null
+  });
+  if (_cloudCache.loginHistory.length > MAX_LOGIN_LOG)
+    _cloudCache.loginHistory.length = MAX_LOGIN_LOG;
+  saveDB();
+}
+
+function doLogin() {
+  const u   = document.getElementById('un').value.trim();
+  const p   = document.getElementById('pw').value;
+  const err = document.getElementById('login-err');
+  err.style.display = 'none';
+
+  const user = getUsers().find(x => x.username === u && x.password === p && x.role === selectedRole);
+
+  if (user) {
+    if (_cloudCache.settings.maintenanceMode && user.role !== 'admin') {
+      document.getElementById('login-err-msg').textContent = 'System under maintenance. Admin login only.';
+      err.style.display = 'flex';
+      recordLogin(user, 'Blocked (Maintenance)');
+      return;
+    }
+
+    currentRole     = user.role;
+    currentUser     = user.username;
+    currentFullName = user.fullname ?? user.username;
+    recordLogin(user, 'Success');
+
+    document.getElementById('login-screen').classList.add('hidden');
+    document.getElementById('app').style.display = 'flex';
+
+    // FEATURE 2: Start session timer
+    startSessionTimer();
+
+    const disp = currentFullName || currentUser;
+    const navAvatar = document.getElementById('nav-avatar');
+    navAvatar.textContent = disp.slice(0,2).toUpperCase();
+    navAvatar.className   = `user-avatar ua-${currentRole}`;
+    document.getElementById('nav-username').textContent = disp;
+
+    const rb = document.getElementById('nav-role-badge');
+    rb.className   = `role-badge rb-${currentRole}`;
+    rb.textContent = {admin:'Admin',area:'Area Maint',central:'Central Mech'}[currentRole] ?? currentRole;
+
+    // Show/hide role-gated nav items
+    const showFlex = els => els.forEach(el => { el.style.display = 'flex'; });
+    const hideAll  = els => els.forEach(el => { el.style.display = 'none'; });
+    const adminEls  = [...document.querySelectorAll('.admin-only')];
+    const areaEls   = [...document.querySelectorAll('.area-only')];
+    hideAll(adminEls); hideAll(areaEls);
+    if (currentRole === 'admin')  { showFlex(adminEls); }
+    if (currentRole === 'area')   { showFlex(areaEls); }
+
+    if (currentRole === 'area')  showPage('create',   document.getElementById('ntab-create'),    'mob-create');
+    else                         showPage('udash',    document.getElementById('ntab-udash'),     'mob-udash');
+
+    if (currentRole === 'admin') {
+      renderAdminDashboard(); renderDataLog(); renderUsers(); renderLogins(); renderChecklistEditor(); renderStorageGraph();
+    }
+  } else {
+    document.getElementById('login-err-msg').textContent = 'Invalid credentials for selected role.';
+    err.style.display = 'flex';
+    // BUG FIX #6: pass a plain object so role records as selectedRole for failed attempts
+    recordLogin({username:u, role:selectedRole}, 'Failed');
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// FEATURE 2 — SESSION TIMER
+// ══════════════════════════════════════════════════════════════════
+function startSessionTimer() {
+  _loginTime = new Date();
+  clearInterval(_sessionTimer);
+
+  // Set tooltip to login time
+  const chip = document.getElementById('session-chip');
+  if (chip) {
+    chip.setAttribute('data-login',
+      `Logged in at ${_loginTime.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true})}`);
+    chip.style.display = 'flex';
+  }
+
+  _sessionTimer = setInterval(() => {
+    if (!_loginTime) return;
+    const elapsed = Math.floor((Date.now() - _loginTime) / 1000);
+    const h = Math.floor(elapsed / 3600);
+    const m = Math.floor((elapsed % 3600) / 60);
+    const s = elapsed % 60;
+    const display = h > 0
+      ? `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`
+      : `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+
+    const timerEl = document.getElementById('session-timer');
+    if (timerEl) timerEl.textContent = display;
+
+    // Colour aging: warn after 4h, alert after 8h
+    const mins = elapsed / 60;
+    if (chip) {
+      chip.classList.toggle('age-warn',  mins >= 240 && mins < 480);
+      chip.classList.toggle('age-alert', mins >= 480);
+    }
+  }, 1000);
+}
+
+function stopSessionTimer() {
+  clearInterval(_sessionTimer);
+  _sessionTimer = null;
+  _loginTime    = null;
+  const timerEl = document.getElementById('session-timer');
+  if (timerEl) timerEl.textContent = '00:00';
+  const chip = document.getElementById('session-chip');
+  if (chip) { chip.classList.remove('age-warn','age-alert'); chip.style.display = 'none'; }
+}
+
+function logout() {
+  // FIX: Tie session duration explicitly to the current user and login time
+  if (_cloudCache && _loginTime && currentUser) {
+    const currentSession = _cloudCache.loginHistory.find(x => 
+      x.user === currentUser && 
+      x.status === 'Success' && 
+      x.sessionDur === null &&
+      new Date(x.loginTs).getTime() === _loginTime.getTime()
+    );
+    
+    if (currentSession) {
+      const ms = Date.now() - _loginTime.getTime();
+      const totalSec = Math.floor(ms / 1000);
+      const h = Math.floor(totalSec / 3600);
+      const m = Math.floor((totalSec % 3600) / 60);
+      const s = totalSec % 60;
+      currentSession.sessionDur = h > 0
+        ? `${String(h).padStart(2,'0')}h ${String(m).padStart(2,'0')}m ${String(s).padStart(2,'0')}s`
+        : `${String(m).padStart(2,'0')}m ${String(s).padStart(2,'0')}s`;
+      saveDB();
+    }
+  }
+  
+  document.getElementById('login-screen').classList.remove('hidden');
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('pw').value = '';
+  stopSessionTimer();
+  currentRole = ''; currentUser = ''; currentFullName = ''; activeJobId = null;
+  checkState = {}; totalItems = 0; currentLadleType = ''; createCheckState = {};
+}
+
+// ══════════════════════════════════════════════════════════════════
+// USERS
+// ══════════════════════════════════════════════════════════════════
+function openAddUser() { document.getElementById('modal-adduser').classList.remove('hidden'); }
+function closeModal()  { document.getElementById('modal-adduser').classList.add('hidden'); }
+
+// ── Public signup request (no login required) ──────────────────
+function openSignupRequest() {
+  document.getElementById('sr-fullname').value = '';
+  document.getElementById('sr-username').value = '';
+  document.getElementById('sr-pass').value      = '';
+  document.getElementById('sr-role').value      = 'area';
+  document.getElementById('sr-err').style.display = 'none';
+  document.getElementById('modal-signup-request').classList.remove('hidden');
+}
+function closeSignupRequestModal() { document.getElementById('modal-signup-request').classList.add('hidden'); }
+
+function submitSignupRequest() {
+  const f   = document.getElementById('sr-fullname').value.trim();
+  const u   = document.getElementById('sr-username').value.trim();
+  const p   = document.getElementById('sr-pass').value;
+  const r   = document.getElementById('sr-role').value;
+  const err = document.getElementById('sr-err');
+  err.style.display = 'none';
+
+  if (!f || u.length < 3 || p.length < 6) {
+    err.textContent = 'Fill all fields (Password min 6 chars).';
+    err.style.display = 'flex'; return;
+  }
+  if (!_cloudCache) {
+    err.textContent = 'Not connected — please try again in a moment.';
+    err.style.display = 'flex'; return;
+  }
+  if (getUsers().find(x => x.username === u)) {
+    err.textContent = 'That username is already taken.';
+    err.style.display = 'flex'; return;
+  }
+  const pending = getSignupRequests();
+  if (pending.find(x => x.username === u)) {
+    err.textContent = 'A request for that username is already pending.';
+    err.style.display = 'flex'; return;
+  }
+
+  pending.push({
+    id: Date.now(), fullname:f, username:u, password:p, role:r,
+    requestedAt: new Date().toISOString()
+  });
+  saveSignupRequests(pending);
+  closeSignupRequestModal();
+  showToast('Request submitted. An administrator will review it shortly.', 'success');
+}
+
+function renderPendingRequests() {
+  const panel = document.getElementById('pending-requests-panel');
+  const tb    = document.getElementById('pending-requests-tbody');
+  if (!panel || !tb) return;
+  const pending = getSignupRequests();
+
+  if (!pending.length) { panel.style.display = 'none'; return; }
+  panel.style.display = 'block';
+
+  tb.innerHTML = pending.map(req => `
+    <tr>
+      <td>${escapeHTML(req.username)}</td>
+      <td>${escapeHTML(req.fullname)}</td>
+      <td><span class="role-badge rb-${req.role}">${req.role.toUpperCase()}</span></td>
+      <td style="font-size:11px;color:var(--text-muted);">${req.requestedAt ? new Date(req.requestedAt).toLocaleString() : '—'}</td>
+      <td style="display:flex;gap:6px;">
+        <button class="btn btn-teal btn-sm" onclick="approveSignupRequest(${req.id})"><i class="ti ti-check"></i> Approve</button>
+        <button class="btn btn-danger-soft btn-sm" onclick="rejectSignupRequest(${req.id})"><i class="ti ti-x"></i> Reject</button>
+      </td>
+    </tr>`
+  ).join('');
+}
+
+function approveSignupRequest(id) {
+  const pending = getSignupRequests();
+  const req = pending.find(x => x.id === id);
+  if (!req) return;
+
+  const users = [...getUsers()];
+  if (users.find(x => x.username === req.username)) {
+    showToast('Username was already taken — request removed without creating account.', 'error');
+  } else {
+    users.push({username:req.username, password:req.password, fullname:req.fullname, role:req.role});
+    saveUsers(users);
+    showToast(`User "${req.username}" approved and created.`, 'success');
+  }
+
+  saveSignupRequests(pending.filter(x => x.id !== id));
+  renderUsers();
+  renderPendingRequests();
+}
+
+function rejectSignupRequest(id) {
+  if (!confirm('Reject this access request? This cannot be undone.')) return;
+  saveSignupRequests(getSignupRequests().filter(x => x.id !== id));
+  renderPendingRequests();
+  showToast('Request rejected.', 'info');
+}
+
+function createUser() {
+  const f   = document.getElementById('nu-fullname').value.trim();
+  const u   = document.getElementById('nu-name').value.trim();
+  const p   = document.getElementById('nu-pass').value;
+  const r   = document.getElementById('nu-role').value;
+  const err = document.getElementById('nu-err');
+  err.style.display = 'none';
+
+  if (!f || u.length < 3 || p.length < 6) {
+    err.textContent = 'Fill all fields (Password min 6 chars).';
+    err.style.display = 'block'; return;
+  }
+  
+  // FIX: Prevent state mutation by creating a shallow copy of the users array
+  const users = [...getUsers()];
+  
+  if (users.find(x => x.username === u)) {
+    err.textContent = 'Username already taken.';
+    err.style.display = 'block'; return;
+  }
+  users.push({username:u, password:p, fullname:f, role:r});
+  saveUsers(users); closeModal(); renderUsers();
+  showToast('User created successfully.');
+}
+
+function renderUsers() {
+  const tb = document.getElementById('users-tbody');
+  tb.innerHTML = getUsers().map(u =>
+    `<tr>
+      <td>${escapeHTML(u.username)}</td>
+      <td>${escapeHTML(u.fullname ?? '')}</td>
+      <td><span class="role-badge rb-${u.role}">${u.role.toUpperCase()}</span></td>
+      <td style="display:flex;gap:6px;">
+        <button class="btn btn-ghost btn-sm" onclick="openEditUser('${escapeHTML(u.username)}')"><i class="ti ti-edit"></i> Edit</button>
+        <button class="btn btn-danger-soft btn-sm" onclick="deleteUser('${escapeHTML(u.username)}')"><i class="ti ti-trash"></i> Delete</button>
+      </td>
+    </tr>`
+  ).join('');
+  renderPendingRequests();
+}
+
+// ── Admin: edit / delete user accounts ───────────────────────────
+function openEditUser(username) {
+  const user = getUsers().find(x => x.username === username);
+  if (!user) return;
+  document.getElementById('eu-original-username').value = user.username;
+  document.getElementById('eu-fullname').value = user.fullname ?? '';
+  document.getElementById('eu-name').value      = user.username;
+  document.getElementById('eu-pass').value      = '';
+  document.getElementById('eu-role').value      = user.role;
+  document.getElementById('eu-err').style.display = 'none';
+  document.getElementById('modal-edituser').classList.remove('hidden');
+}
+
+function closeEditUserModal() { document.getElementById('modal-edituser').classList.add('hidden'); }
+
+function saveEditUser() {
+  const original = document.getElementById('eu-original-username').value;
+  const f   = document.getElementById('eu-fullname').value.trim();
+  const u   = document.getElementById('eu-name').value.trim();
+  const p   = document.getElementById('eu-pass').value;
+  const r   = document.getElementById('eu-role').value;
+  const err = document.getElementById('eu-err');
+  err.style.display = 'none';
+
+  if (!f || u.length < 3) {
+    err.textContent = 'Full name and username are required.';
+    err.style.display = 'flex'; return;
+  }
+  if (p && p.length < 6) {
+    err.textContent = 'New password must be at least 6 characters (or leave blank to keep current).';
+    err.style.display = 'flex'; return;
+  }
+
+  const users = [...getUsers()];
+  const idx   = users.findIndex(x => x.username === original);
+  if (idx === -1) { err.textContent = 'User not found.'; err.style.display = 'flex'; return; }
+
+  // Prevent renaming to a username already used by a different account
+  if (u !== original && users.find(x => x.username === u)) {
+    err.textContent = 'That username is already taken.';
+    err.style.display = 'flex'; return;
+  }
+
+  // Guard: don't demote/rename away the last remaining admin account
+  const otherAdmins = users.filter((x, i) => i !== idx && x.role === 'admin');
+  if (users[idx].role === 'admin' && r !== 'admin' && otherAdmins.length === 0) {
+    err.textContent = 'Cannot change role — at least one Admin account must remain.';
+    err.style.display = 'flex'; return;
+  }
+
+  users[idx] = {
+    username: u,
+    password: p ? p : users[idx].password,
+    fullname: f,
+    role: r
+  };
+  saveUsers(users);
+  closeEditUserModal();
+  renderUsers();
+  showToast('User updated successfully.', 'success');
+}
+
+function deleteUser(username) {
+  const users = getUsers();
+  const user  = users.find(x => x.username === username);
+  if (!user) return;
+
+  const otherAdmins = users.filter(x => x.username !== username && x.role === 'admin');
+  if (user.role === 'admin' && otherAdmins.length === 0) {
+    showToast('Cannot delete the last remaining Admin account.', 'error');
+    return;
+  }
+  if (username === currentUser) {
+    showToast('You cannot delete the account you are currently logged in as.', 'error');
+    return;
+  }
+  if (!confirm(`Delete user "${username}"? This cannot be undone.`)) return;
+
+  saveUsers(users.filter(x => x.username !== username));
+  renderUsers();
+  showToast('User deleted.', 'success');
+}
+
+// ══════════════════════════════════════════════════════════════════
+// NAVIGATION
+// BUG FIX #2: showPage now always deactivates ALL nav tabs + mob tabs
+// before activating the target. Workspace tab was missing nav/mob args.
+// ══════════════════════════════════════════════════════════════════
+function showPage(id, tab, mobTabId) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.mob-tab').forEach(t => t.classList.remove('active'));
+
+  const pg = document.getElementById(`page-${id}`);
+  if (pg) pg.classList.add('active');
+  if (tab) tab.classList.add('active');
+  // mobTabId may be an Element (called from mobile buttons) or a string ID
+  const mobEl = (mobTabId instanceof Element) ? mobTabId
+              : (mobTabId ? document.getElementById(mobTabId) : null);
+  if (mobEl) mobEl.classList.add('active');
+
+  if (id === 'udash')    renderActiveLadles();
+  if (id === 'users')    renderUsers();
+  if (id === 'settings') { renderChecklistEditor(); renderStorageGraph(); }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// JOB WORKFLOW  (Create → Inspect → Receive)
+// ══════════════════════════════════════════════════════════════════
+function selectLadleType(type) {
+  currentLadleType = type;
+  document.querySelectorAll('.ladle-type-card').forEach(el => el.classList.remove('selected-steel','selected-hot'));
+  document.getElementById(`ltc-${type}`).classList.add(`selected-${type}`);
+  document.getElementById('create-meta').style.display  = 'grid';
+  document.getElementById('create-save').style.display  = 'flex';
+  renderCreateChecklist();
+}
+
+function renderCreateChecklist() {
+  const sections = _cloudCache?.checklists?.createJob ?? [];
+  const wrap      = document.getElementById('create-checklist-wrap');
+  const container = document.getElementById('create-cl-sections');
+  if (!container) return;
+
+  if (!sections.length) { wrap.style.display = 'none'; return; }
+  wrap.style.display = 'block';
+  container.innerHTML = '';
+
+  sections.forEach((sec, si) => {
+    const div = document.createElement('div');
+    div.className = 'section-block';
+
+    let html = `<div class="section-head"><i class="ti ${escapeHTML(sec.icon)} sec-icon"></i><span class="s-title">${escapeHTML(sec.title)}</span></div>`;
+
+    (sec.items ?? []).forEach((item, ii) => {
+      const label   = item.label ?? item;
+      const type    = item.type  ?? 'text';
+      const options = item.options ?? '';
+      const val     = createCheckState[`${si}-${ii}`] ?? '';
+      const filledClass = val.trim ? (val.trim().length > 0 ? 'filled' : '') : '';
+      const key     = `${si}-${ii}`;
+
+      let inputHtml = '';
+      if (type === 'textarea') {
+        inputHtml = `<textarea class="cl-input" oninput="updateCreateCheck('${key}',this.value)" placeholder="Enter notes...">${escapeHTML(val)}</textarea>`;
+      } else if (type === 'select') {
+        const opts = options.split(',').map(o => o.trim()).filter(Boolean);
+        inputHtml = `<select class="cl-input" onchange="updateCreateCheck('${key}',this.value)">
+          <option value="" disabled ${!val?'selected':''}>Select an option…</option>
+          ${opts.map(o => `<option value="${escapeHTML(o)}" ${val===o?'selected':''}>${escapeHTML(o)}</option>`).join('')}
+        </select>`;
+      } else if (type === 'number') {
+        inputHtml = `<input type="number" class="cl-input" oninput="updateCreateCheck('${key}',this.value)" value="${escapeHTML(val)}" placeholder="Enter value…"/>`;
+      } else {
+        inputHtml = `<input type="text" class="cl-input" oninput="updateCreateCheck('${key}',this.value)" value="${escapeHTML(val)}" placeholder="Enter value…"/>`;
+      }
+
+      html += `<div class="cl-item-box ${filledClass}" id="create-box-${key}">
+        <div class="cl-item-label"><i class="ti ti-check status-icon"></i>${escapeHTML(label)}</div>
+        ${inputHtml}
+      </div>`;
+    });
+
+    div.innerHTML = html;
+    container.appendChild(div);
+  });
+}
+
+function updateCreateCheck(key, val) {
+  createCheckState[key] = val;
+  const box = document.getElementById(`create-box-${key}`);
+  if (box) box.classList.toggle('filled', typeof val === 'string' && val.trim().length > 0);
+}
+
+function createJob() {
+  const ladle = document.getElementById('m-ladle').value.trim();
+  const shift = document.getElementById('m-shift').value;
+  if (!ladle || !shift) { showToast('Enter Ladle No. and Shift.', 'error'); return; }
+  if (!currentLadleType) { showToast('Select a ladle type first.', 'error'); return; }
+
+  const template = JSON.parse(JSON.stringify(_cloudCache.checklists[currentLadleType]));
+  const tItems   = template.reduce((acc, sec) => acc + (sec.items?.length ?? 0), 0);
+
+  const createTemplate = JSON.parse(JSON.stringify(_cloudCache.checklists.createJob ?? []));
+
+  const newJob = {
+    id: Date.now(), phase:'job_created',
+    ladleType:currentLadleType, ladle, shift,
+    createdBy:currentFullName, createdAt:new Date().toISOString(),
+    pct:0, checkedCount:0, totalItems:tItems,
+    checklistTemplate:template, checkState:{},
+    createChecklistTemplate:createTemplate, createCheckState:{...createCheckState}
+  };
+
+  const log = getLog();
+  log.unshift(newJob);
+  saveLog(log);
+
+  // Reset create form
+  document.getElementById('m-ladle').value = '';
+  document.getElementById('m-shift').value = '';
+  currentLadleType = '';
+  createCheckState = {};
+  document.getElementById('create-meta').style.display = 'none';
+  document.getElementById('create-save').style.display = 'none';
+  document.getElementById('create-checklist-wrap').style.display = 'none';
+  document.querySelectorAll('.ladle-type-card').forEach(el => el.classList.remove('selected-steel','selected-hot'));
+
+  showToast('Ladle Job Created & Issued to Central Mech.');
+  showPage('udash', document.getElementById('ntab-udash'), 'mob-udash');
+}
+
+function renderActiveLadles() {
+  const container = document.getElementById('udash-content');
+  const active    = getLog().filter(r => r.phase !== 'complete');
+
+  if (!active.length) {
+    container.innerHTML = `<div class="no-active-card"><i class="ti ti-ghost nac-icon"></i><h3>No active jobs</h3><p>All ladles are currently completed.</p></div>`;
+    return;
+  }
+
+  const PHASE_CLASS = {job_created:'phase-created', inspection:'phase-inspection', pending_acceptance:'phase-pending_acceptance'};
+  const PHASE_TEXT  = {
+    job_created:'Waiting for Central Mech',
+    inspection:'Inspection in Progress',
+    pending_acceptance:'Ready for Handover (Area)'
+  };
+
+  container.innerHTML = active.map(r => {
+    const statusClass = PHASE_CLASS[r.phase] ?? '';
+    const statusText  = PHASE_TEXT[r.phase]  ?? r.phase;
+    let btnHtml = '';
+
+    if (r.phase === 'job_created' || r.phase === 'inspection') {
+      if (currentRole === 'central' || currentRole === 'admin') {
+        btnHtml = `<button class="btn-central" onclick="openWorkspace(${r.id})"><i class="ti ti-tool"></i> ${r.phase==='job_created'?'Start':'Continue'} Inspection</button>`;
+      } else {
+        btnHtml = `<span style="font-size:12px;color:var(--text-muted);"><i class="ti ti-clock"></i> Inspection pending by Central</span>`;
+      }
+    } else if (r.phase === 'pending_acceptance') {
+      if (currentRole === 'area' || currentRole === 'admin') {
+        btnHtml = `<button class="btn btn-blue" onclick="openWorkspace(${r.id})"><i class="ti ti-arrow-bar-to-down"></i> Receive the ladle</button>`;
+      } else {
+        btnHtml = `<span style="font-size:12px;color:var(--text-muted);"><i class="ti ti-clock"></i> Waiting for Area Maint</span>`;
+      }
+    }
+
+    return `
+    <div class="active-ladle-container">
+      <div class="active-ladle-banner ${statusClass}">
+        <div class="alb-top">
+          <div class="alb-title"><i class="ti ${r.ladleType==='hot'?'ti-flame':'ti-bucket'}"></i> Ladle ${escapeHTML(r.ladle)} — ${r.ladleType==='hot'?'Hot Metal':'Steel'}</div>
+          <span class="alb-status-badge">${statusText}</span>
+        </div>
+        <div class="alb-grid">
+          <div class="alb-field"><div class="alb-field-label">Created By</div><div class="alb-field-val" style="font-size:12px;">${escapeHTML(r.createdBy)}</div></div>
+          <div class="alb-field"><div class="alb-field-label">Shift</div><div class="alb-field-val">${escapeHTML(r.shift)}</div></div>
+          <div class="alb-field"><div class="alb-field-label">Progress</div><div class="alb-field-val">${r.pct}%</div></div>
+        </div>
+        <div style="margin-top:1rem;">${btnHtml}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// BUG FIX #2: openWorkspace passes the ntab-udash element + mob string so
+// showPage deactivates the previous tab correctly when entering workspace.
+function openWorkspace(id) {
+  const job = getLog().find(x => x.id === id);
+  if (!job) return;
+  activeJobId = id;
+
+  // FIX #2: pass tab + mobTab args so nav highlight updates correctly
+  showPage('workspace', null, null);
+  // Deactivate all tabs manually since workspace has no nav button
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.mob-tab').forEach(t => t.classList.remove('active'));
+
+  const typeLabel = job.ladleType === 'hot' ? 'Hot Metal' : 'Steel';
+  document.getElementById('ws-type-badge').innerHTML =
+    `<i class="ti ${job.ladleType==='hot'?'ti-flame':'ti-bucket'}"></i> ${typeLabel} Ladle — No. ${escapeHTML(job.ladle)}`;
+
+  document.getElementById('phase-inspection').style.display  = 'none';
+  document.getElementById('phase-acceptance').style.display  = 'none';
+
+  const isPending = job.phase === 'pending_acceptance';
+  document.getElementById('ps2').className = `phase-step ${isPending?'ps-done':'ps-active'}`;
+  document.getElementById('pc2').className = `phase-connector${isPending?' conn-done':''}`;
+  document.getElementById('ps3').className = `phase-step ${isPending?'ps-active':'ps-idle'}`;
+
+  if (job.phase === 'job_created' || job.phase === 'inspection') {
+    document.getElementById('phase-inspection').style.display = 'block';
+
+    const sections = job.checklistTemplate ?? _cloudCache.checklists[job.ladleType];
+    const container = document.getElementById('cl-sections');
+    container.innerHTML = '';
+    checkState = job.checkState ?? {};
+    totalItems = job.totalItems;
+
+    sections.forEach((sec, si) => {
+      const div = document.createElement('div');
+      div.className = 'section-block';
+
+      let html = `<div class="section-head"><i class="ti ${escapeHTML(sec.icon)} sec-icon"></i><span class="s-title">${escapeHTML(sec.title)}</span></div>`;
+
+      (sec.items ?? []).forEach((item, ii) => {
+        const label      = item.label ?? item;
+        const type       = item.type  ?? 'text';
+        const options    = item.options ?? '';
+        const val        = checkState[`${si}-${ii}`] ?? '';
+        const filledClass= val.trim().length > 0 ? 'filled' : '';
+        const key        = `${si}-${ii}`;
+
+        let inputHtml = '';
+        if (type === 'textarea') {
+          inputHtml = `<textarea class="cl-input" oninput="updateCheck('${key}',this.value)" placeholder="Enter notes...">${escapeHTML(val)}</textarea>`;
+        } else if (type === 'select') {
+          const opts = options.split(',').map(o => o.trim()).filter(Boolean);
+          inputHtml = `<select class="cl-input" onchange="updateCheck('${key}',this.value)">
+            <option value="" disabled ${!val?'selected':''}>Select an option…</option>
+            ${opts.map(o => `<option value="${escapeHTML(o)}" ${val===o?'selected':''}>${escapeHTML(o)}</option>`).join('')}
+          </select>`;
+        } else if (type === 'number') {
+          inputHtml = `<input type="number" class="cl-input" oninput="updateCheck('${key}',this.value)" value="${escapeHTML(val)}" placeholder="Enter value…"/>`;
+        } else {
+          inputHtml = `<input type="text" class="cl-input" oninput="updateCheck('${key}',this.value)" value="${escapeHTML(val)}" placeholder="Enter value…"/>`;
+        }
+
+        html += `<div class="cl-item-box ${filledClass}" id="box-${key}">
+          <div class="cl-item-label"><i class="ti ti-check status-icon"></i>${escapeHTML(label)}</div>
+          ${inputHtml}
+        </div>`;
+      });
+
+      div.innerHTML = html;
+      container.appendChild(div);
+    });
+
+    document.getElementById('r-by').value         = job.cmRecvBy    ?? currentFullName;
+    document.getElementById('r-personal').value   = job.cmPersonal  ?? '';
+    document.getElementById('sig-cm-name').value  = job.cmSigName   ?? '';
+    document.getElementById('sig-cm-desig').value = job.cmSigDesig  ?? '';
+    updateProgressUI();
+
+    if (job.phase === 'job_created') {
+      job.phase = 'inspection';
+      saveLog(getLog().map(x => x.id === job.id ? job : x));
+    }
+  } else if (job.phase === 'pending_acceptance') {
+    document.getElementById('phase-acceptance').style.display = 'block';
+    document.getElementById('h-by').value             = job.amAcptBy  ?? currentFullName;
+    document.getElementById('h-personal').value       = job.amPersonal ?? '';
+    document.getElementById('hndv-sig-am-name').value = job.amSigName  ?? '';
+    document.getElementById('hndv-sig-am-desig').value= job.amSigDesig ?? '';
+
+    // Update the ladle type badge in Phase 3 header
+    const typeLabel = job.ladleType === 'hot' ? 'Hot Metal' : 'Steel';
+    document.getElementById('ws-accept-type-badge').innerHTML =
+      `<i class="ti ${job.ladleType==='hot'?'ti-flame':'ti-bucket'}"></i> ${typeLabel} Ladle — No. ${escapeHTML(job.ladle)}`;
+
+    // Render read-only checklist review for Area Maint to verify
+    const reviewContainer = document.getElementById('accept-checklist-review');
+    const template = job.checklistTemplate ?? _cloudCache.checklists[job.ladleType];
+    const cs       = job.checkState ?? {};
+    let reviewHTML = '';
+
+    if (template) {
+      template.forEach((sec, si) => {
+        const filled = (sec.items ?? []).filter((_, ii) => {
+          const v = cs[`${si}-${ii}`];
+          return typeof v === 'string' && v.trim().length > 0;
+        }).length;
+        const total  = (sec.items ?? []).length;
+        const allOk  = filled === total;
+
+        reviewHTML += `
+          <div class="section-block" style="margin-bottom:8px;">
+            <div class="section-head">
+              <i class="ti ${escapeHTML(sec.icon)} sec-icon"></i>
+              <span class="s-title">${escapeHTML(sec.title)}</span>
+              <span style="font-size:10px;font-weight:700;padding:2px 9px;border-radius:20px;
+                background:${allOk?'rgba(34,197,94,0.12)':'rgba(245,158,11,0.12)'};
+                color:${allOk?'#86efac':'var(--accent)'};
+                border:1px solid ${allOk?'rgba(34,197,94,0.25)':'rgba(245,158,11,0.25)'};">
+                ${filled}/${total}
+              </span>
+            </div>`;
+
+        (sec.items ?? []).forEach((item, ii) => {
+          const label  = item.label ?? item;
+          const val    = cs[`${si}-${ii}`] ?? '';
+          const hasVal = typeof val === 'string' && val.trim().length > 0;
+
+          reviewHTML += `
+            <div class="cl-item-box${hasVal?' filled':''}" style="pointer-events:none;">
+              <div class="cl-item-label">
+                <i class="ti ${hasVal?'ti-check':'ti-point'} status-icon" style="color:${hasVal?'var(--success)':'var(--text-muted)'};"></i>
+                ${escapeHTML(label)}
+              </div>
+              <div style="font-size:12px;font-family:var(--mono);padding:6px 10px;
+                background:rgba(0,0,0,0.15);border-radius:6px;
+                color:${hasVal?'var(--text-primary)':'var(--text-muted)'};
+                border:1px solid var(--border-mid);">
+                ${hasVal ? escapeHTML(val) : '<em>Not filled</em>'}
+              </div>
+            </div>`;
+        });
+
+        reviewHTML += `</div>`;
+      });
+    }
+
+    reviewContainer.innerHTML = reviewHTML || '<p style="color:var(--text-muted);font-size:12px;">No checklist data available.</p>';
+  }
+}
+
+function updateCheck(key, val) {
+  checkState[key] = val;
+  document.getElementById(`box-${key}`).classList.toggle('filled', typeof val === 'string' && val.trim().length > 0);
+  updateProgressUI();
+}
+
+function updateProgressUI() {
+  const done = Object.values(checkState).filter(v => typeof v === 'string' && v.trim().length > 0).length;
+  const pct  = totalItems > 0 ? Math.round((done / totalItems) * 100) : 0;
+  document.getElementById('prog-fill').style.width  = `${pct}%`;
+  document.getElementById('pct-label').textContent  = `${pct}% (${done}/${totalItems})`;
+}
+
+function closeWorkspace() {
+  activeJobId = null;
+  showPage('udash', document.getElementById('ntab-udash'), 'mob-udash');
+}
+
+function saveProgress() {
+  if (!activeJobId) return;
+  const log = getLog();
+  const job = log.find(x => x.id === activeJobId);
+  if (!job) return;
+
+  const done  = Object.values(checkState).filter(v => typeof v === 'string' && v.trim().length > 0).length;
+  job.checkState    = checkState;
+  job.checkedCount  = done;
+  job.pct           = Math.round((done / totalItems) * 100);
+  job.cmRecvBy      = document.getElementById('r-by').value;
+  job.cmPersonal    = document.getElementById('r-personal').value;
+  job.cmSigName     = document.getElementById('sig-cm-name').value;
+  job.cmSigDesig    = document.getElementById('sig-cm-desig').value;
+  saveLog(log);
+  showToast('Progress saved.');
+}
+
+function declareCompletion() {
+  if (!activeJobId) return;
+  saveProgress();
+  const log = getLog();
+  const job = log.find(x => x.id === activeJobId);
+  if (!job) return;
+  if (job.pct < 100 && !confirm('Checklist not 100% complete. Declare completion anyway?')) return;
+
+  job.phase               = 'pending_acceptance';
+  job.completedByCentralAt= new Date().toISOString();
+  job.cmRecvByCentral     = job.cmRecvBy;
+  saveLog(log);
+  showToast('Job completed and handed over to Area Maint.', 'success');
+  closeWorkspace();
+}
+
+function receiveLadle() {
+  if (!activeJobId) return;
+  const log = getLog();
+  const job = log.find(x => x.id === activeJobId);
+  if (!job) return;
+
+  job.amAcptBy  = document.getElementById('h-by').value;
+  job.amPersonal= document.getElementById('h-personal').value;
+  job.amSigName = document.getElementById('hndv-sig-am-name').value;
+  job.amSigDesig= document.getElementById('hndv-sig-am-desig').value;
+
+  if (!job.amSigName) { showToast('Please provide Area Sign-off name.', 'error'); return; }
+
+  job.phase          = 'complete';
+  job.acceptedByAreaAt = new Date().toISOString();
+  saveLog(log);
+  showToast('Ladle Received. Job Closed Successfully.', 'success');
+  closeWorkspace();
+}
+
+// ══════════════════════════════════════════════════════════════════
+// ADMIN: DASHBOARD, DATA LOG, LOGINS
+// ══════════════════════════════════════════════════════════════════
+function renderAdminDashboard() {
+  const log = getLog();
+  const count = phase => log.filter(x => x.phase === phase).length;
+  document.getElementById('dash-kpi').innerHTML = `
+    <div class="dash-card dc-total"><div class="dc-num">${log.length}</div><div class="dc-label">Total Jobs</div></div>
+    <div class="dash-card dc-complete"><div class="dc-num">${count('complete')}</div><div class="dc-label">Completed</div></div>
+    <div class="dash-card"><div class="dc-num" style="color:var(--blue-light);">${count('job_created')}</div><div class="dc-label">Awaiting Central</div></div>
+    <div class="dash-card"><div class="dc-num" style="color:var(--accent);">${count('inspection')}</div><div class="dc-label">In Inspection</div></div>
+    <div class="dash-card dc-pending"><div class="dc-num" style="color:var(--teal-light);">${count('pending_acceptance')}</div><div class="dc-label">Awaiting Area</div></div>
+  `;
+}
+
+// BUG FIX #1 & #4: totalDur is now computed AND rendered in the table
+function renderDataLog() {
+  const log = getLog();
+  document.getElementById('log-tbody').innerHTML = log.map(r => {
+    const cmDur    = formatDuration(r.createdAt, r.completedByCentralAt);
+    const totalDur = formatDuration(r.createdAt, r.acceptedByAreaAt);   // FIX #1
+    return `
+      <tr>
+        <td style="font-family:var(--mono);">${r.id}</td>
+        <td><span class="pill ${r.ladleType==='hot'?'pill-hot':'pill-steel'}">${r.ladleType.toUpperCase()}</span></td>
+        <td style="font-weight:700;">${escapeHTML(r.ladle)}</td>
+        <td>${escapeHTML(r.shift)}</td>
+        <td><span class="pill" style="border:1px solid #555;">${r.phase.replace(/_/g,' ').toUpperCase()}</span></td>
+        <td>${escapeHTML(r.createdBy)}</td>
+        <td><span style="color:var(--accent);font-weight:700;">${cmDur}</span></td>
+        <td><span style="color:var(--teal-light);font-weight:700;">${totalDur}</span></td>
+        <td>${r.phase==='complete'?'<span class="pill pill-complete">COMPLETE</span>':'<span class="pill pill-pending">PENDING</span>'}</td>
+        <td><button class="btn btn-ghost btn-xs btn-icon" onclick="showJobDetails(${r.id})"><i class="ti ti-eye"></i></button></td>
+      </tr>`;
+  }).join('');
+}
+
+function renderLogins() {
+  const history = _cloudCache?.loginHistory ?? [];
+  document.getElementById('logins-tbody').innerHTML = history.map(r => {
+    const color = r.status === 'Success' ? '#86efac' : '#fca5a5';
+    const sessionCell = r.status === 'Success'
+      ? (r.sessionDur
+          ? `<span style="font-family:var(--mono);color:var(--teal-light);font-weight:700;">${escapeHTML(r.sessionDur)}</span>`
+          : `<span style="color:var(--accent);font-size:11px;">Active</span>`)
+      : `<span style="color:var(--text-muted);">—</span>`;
+    return `
+    <tr>
+      <td style="font-family:var(--mono);font-size:11px;">${new Date(r.ts).toLocaleString('en-IN')}</td>
+      <td style="font-weight:700;">${escapeHTML(r.user)}</td>
+      <td><span class="role-badge rb-${r.role}">${r.role.toUpperCase()}</span></td>
+      <td style="color:${color};font-weight:700;">${escapeHTML(r.status)}</td>
+      <td>${sessionCell}</td>
+    </tr>`;
+  }).join('');
+}
+
+// BUG FIX #1 & #4: totalDur now rendered in Job Details modal
+function showJobDetails(id) {
+  const r = getLog().find(x => x.id === id);
+  if (!r) return;
+
+  const cmDur    = formatDuration(r.createdAt, r.completedByCentralAt);
+  const totalDur = formatDuration(r.createdAt, r.acceptedByAreaAt);   // FIX #1
+
+  let html = `
+    <div class="jd-grid">
+      <div class="jd-card"><div class="jd-label">Job ID</div><div class="jd-val" style="font-family:var(--mono);">${r.id}</div></div>
+      <div class="jd-card"><div class="jd-label">Ladle</div><div class="jd-val">${escapeHTML(r.ladle)} (${r.ladleType.toUpperCase()})</div></div>
+      <div class="jd-card"><div class="jd-label">Shift</div><div class="jd-val">${escapeHTML(r.shift)}</div></div>
+      <div class="jd-card"><div class="jd-label">Status</div><div class="jd-val">${r.phase.toUpperCase()}</div></div>
+      <div class="jd-card"><div class="jd-label">Created By</div><div class="jd-val">${escapeHTML(r.createdBy)}<br><span style="font-size:10px;font-weight:400;color:var(--text-muted);">${r.createdAt?new Date(r.createdAt).toLocaleString():'—'}</span></div></div>
+      <div class="jd-card"><div class="jd-label">CM Duration</div><div class="jd-val" style="color:var(--accent);">${cmDur}</div></div>
+      <div class="jd-card"><div class="jd-label">Total Duration</div><div class="jd-val" style="color:var(--teal-light);">${totalDur}</div></div>
+    </div>
+
+    <h4 style="margin-top:1.5rem;margin-bottom:0.5rem;font-size:14px;border-bottom:1px solid var(--border);padding-bottom:5px;color:var(--blue-light);">Signatures &amp; Handovers</h4>
+    <div class="jd-grid">
+      <div class="jd-card"><div class="jd-label">CM Receiver</div><div class="jd-val">${escapeHTML(r.cmRecvByCentral||r.cmRecvBy||'—')}<br><span style="font-size:10px;font-weight:400;color:var(--text-muted);">Pers: ${escapeHTML(r.rPersonal||r.cmPersonal||'—')}</span></div></div>
+      <div class="jd-card"><div class="jd-label">CM Sign-off</div><div class="jd-val">${escapeHTML(r.sigCmName||'—')}<br><span style="font-size:10px;font-weight:400;color:var(--text-muted);">${escapeHTML(r.sigCmDesig||'')}</span></div></div>
+      <div class="jd-card"><div class="jd-label">AM Accepter</div><div class="jd-val">${escapeHTML(r.amAcptBy||'—')}<br><span style="font-size:10px;font-weight:400;color:var(--text-muted);">Pers: ${escapeHTML(r.amPersonal||'—')}</span></div></div>
+      <div class="jd-card"><div class="jd-label">AM Sign-off</div><div class="jd-val">${escapeHTML(r.amSigName||'—')}<br><span style="font-size:10px;font-weight:400;color:var(--text-muted);">${escapeHTML(r.amSigDesig||'')}</span></div></div>
+    </div>`;
+
+  const createTemplate = r.createChecklistTemplate;
+  if (createTemplate && createTemplate.length) {
+    html += `<h4 style="margin-top:1.5rem;margin-bottom:0.5rem;font-size:14px;border-bottom:1px solid var(--border);padding-bottom:5px;color:var(--accent);">Create Job Checklist (Area Maint.)</h4>`;
+    createTemplate.forEach((sec, si) => {
+      html += `<div class="jd-section">
+        <div class="jd-section-head"><i class="ti ${escapeHTML(sec.icon)}" style="margin-right:6px;color:var(--accent);"></i>${escapeHTML(sec.title)}</div>`;
+      (sec.items ?? []).forEach((item, ii) => {
+        const label  = item.label ?? item;
+        const val    = r.createCheckState?.[`${si}-${ii}`] ?? '';
+        const hasVal = typeof val === 'string' && val.trim().length > 0;
+        const icon   = hasVal
+          ? '<i class="ti ti-check" style="color:var(--success);font-size:16px;"></i>'
+          : '<i class="ti ti-alert-circle" style="color:var(--warning);font-size:16px;"></i>';
+        html += `<div class="jd-item">
+          <div style="font-weight:600;display:flex;align-items:flex-start;gap:6px;color:var(--text-primary);">${icon} ${escapeHTML(label)}</div>
+          <div style="padding-left:22px;color:${hasVal?'var(--text-primary)':'var(--text-muted)'};font-family:var(--mono);">${hasVal?escapeHTML(val):'<em>No data entered</em>'}</div>
+        </div>`;
+      });
+      html += `</div>`;
+    });
+  }
+
+  html += `<h4 style="margin-top:1.5rem;margin-bottom:0.5rem;font-size:14px;border-bottom:1px solid var(--border);padding-bottom:5px;color:var(--teal-light);">Checklist Details</h4>`;
+
+  const template = r.checklistTemplate ?? _cloudCache?.checklists?.[r.ladleType];
+  if (template) {
+    template.forEach((sec, si) => {
+      html += `<div class="jd-section">
+        <div class="jd-section-head"><i class="ti ${escapeHTML(sec.icon)}" style="margin-right:6px;color:var(--accent);"></i>${escapeHTML(sec.title)}</div>`;
+      (sec.items ?? []).forEach((item, ii) => {
+        const label  = item.label ?? item;
+        let   val    = r.checkState?.[`${si}-${ii}`] ?? null;
+        if (val === true)  val = 'Checked / OK';
+        if (val === false) val = '';
+        const hasVal = typeof val === 'string' && val.trim().length > 0;
+        const icon   = hasVal
+          ? '<i class="ti ti-check" style="color:var(--success);font-size:16px;"></i>'
+          : '<i class="ti ti-alert-circle" style="color:var(--warning);font-size:16px;"></i>';
+        html += `<div class="jd-item">
+          <div style="font-weight:600;display:flex;align-items:flex-start;gap:6px;color:var(--text-primary);">${icon} ${escapeHTML(label)}</div>
+          <div style="padding-left:22px;color:${hasVal?'var(--text-primary)':'var(--text-muted)'};font-family:var(--mono);">${hasVal?escapeHTML(val):'<em>No data entered</em>'}</div>
+        </div>`;
+      });
+      html += `</div>`;
+    });
+  }
+
+  document.getElementById('jd-content').innerHTML = html;
+  document.getElementById('modal-job-details').classList.remove('hidden');
+}
+
+function closeJobDetails() {
+  document.getElementById('modal-job-details').classList.add('hidden');
+}
+
+// ══════════════════════════════════════════════════════════════════
+// ADMIN: CHECKLIST EDITOR
+// ══════════════════════════════════════════════════════════════════
+function getDraft() {
+  if (!_draft) _draft = JSON.parse(JSON.stringify(_cloudCache));
+  return _draft;
+}
+
+function renderChecklistEditor() {
+  const type      = document.getElementById('ce-type').value;
+  const list      = getDraft().checklists[type] ?? [];
+  const container = document.getElementById('ce-sections');
+
+  container.innerHTML = list.map((sec, si) => `
+    <div class="ce-sec" style="background:rgba(0,0,0,0.2);padding:12px;border-radius:8px;margin-bottom:10px;border:1px solid var(--border);">
+      <div style="display:flex;gap:8px;margin-bottom:8px;">
+        <input type="text" value="${escapeHTML(sec.icon)}" oninput="getDraft().checklists['${type}'][${si}].icon=this.value" placeholder="Icon (ti-search)" style="width:110px;background:rgba(255,255,255,0.05);border:1px solid var(--border-mid);border-radius:4px;color:#fff;padding:6px 10px;font-size:12px;outline:none;"/>
+        <input type="text" value="${escapeHTML(sec.title)}" oninput="getDraft().checklists['${type}'][${si}].title=this.value" placeholder="Section Title" style="flex:1;background:rgba(255,255,255,0.05);border:1px solid var(--border-mid);border-radius:4px;color:#fff;padding:6px 10px;font-size:12px;outline:none;"/>
+        <button class="btn btn-danger-soft btn-sm" onclick="ceRemoveSection(${si})"><i class="ti ti-trash"></i></button>
+      </div>
+      <div>${(sec.items ?? []).map((item, ii) => `
+        <div class="ce-item-row">
+          <div class="ce-item-inputs">
+            <input type="text" value="${escapeHTML(item.label)}" oninput="updateItem('${type}',${si},${ii},'label',this.value)" placeholder="Checkpoint prompt…">
+            <select onchange="updateItem('${type}',${si},${ii},'type',this.value);renderChecklistEditor();">
+              <option value="text"     ${item.type==='text'?'selected':''}>Short Text</option>
+              <option value="textarea" ${item.type==='textarea'?'selected':''}>Long Text</option>
+              <option value="number"   ${item.type==='number'?'selected':''}>Number</option>
+              <option value="select"   ${item.type==='select'?'selected':''}>Dropdown</option>
+            </select>
+            ${item.type==='select'?`<input type="text" value="${escapeHTML(item.options??'')}" oninput="updateItem('${type}',${si},${ii},'options',this.value)" placeholder="Comma-separated options (e.g. OK,Not OK,N/A)">`:'' }
+          </div>
+          <button class="btn btn-danger-soft btn-sm" style="padding:4px 8px;" onclick="delSecItem('${type}',${si},${ii})"><i class="ti ti-x"></i></button>
+        </div>`).join('')}
+        <button class="btn btn-ghost btn-sm" style="margin-top:8px;" onclick="addSecItem('${type}',${si})"><i class="ti ti-plus"></i> Add Field</button>
+      </div>
+    </div>`
+  ).join('');
+}
+
+function updateItem(type, si, ii, key, val) { getDraft().checklists[type][si].items[ii][key] = val; }
+
+function addSecItem(type, si) {
+  const items = getDraft().checklists[type][si].items ??= [];
+  items.push({label:'', type:'text', options:''});
+  renderChecklistEditor();
+}
+
+function delSecItem(type, si, ii) {
+  getDraft().checklists[type][si].items.splice(ii, 1);
+  renderChecklistEditor();
+}
+
+function ceAddSection() {
+  const type = document.getElementById('ce-type').value;
+  (getDraft().checklists[type] ??= []).push({icon:'ti-tool', title:'New Section', items:[{label:'',type:'text',options:''}]});
+  renderChecklistEditor();
+}
+
+function ceRemoveSection(si) {
+  if (!confirm('Delete this section?')) return;
+  const type = document.getElementById('ce-type').value;
+  getDraft().checklists[type].splice(si, 1);
+  renderChecklistEditor();
+}
+
+function ceSave() {
+  _cloudCache.checklists = getDraft().checklists;
+  _draft = null;
+  saveDB();
+  showToast('Checklists saved successfully!');
+}
+
+// ══════════════════════════════════════════════════════════════════
+// ADMIN: SETTINGS
+// ══════════════════════════════════════════════════════════════════
+function toggleMaintMode() {
+  _cloudCache.settings.maintenanceMode = document.getElementById('set-maint').checked;
+  saveDB();
+  showToast(_cloudCache.settings.maintenanceMode ? 'Maintenance Mode Enabled' : 'Maintenance Mode Disabled');
+}
+
+function exportDB() {
+  if (!_cloudCache) return;
+  const blob = new Blob([JSON.stringify(_cloudCache, null, 2)], {type:'application/json'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `Ladle_DB_Backup_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+async function promptWipeCloud() {
+  const pass = prompt('WARNING: This will permanently erase ALL jobs and users.\nEnter master password to proceed:');
+  if (pass === null || pass === '') return;
+  if (pass !== WIPE_MASTER_PW) { showToast('Incorrect password.', 'error'); return; }
+  if (!confirm('Are you absolutely sure? This action cannot be undone.')) return;
+
+  showToast('Erasing cloud data…', 'info');
+  showSyncStatus('syncing');
+
+  _cloudCache = {
+    lm_log_v2:   [],
+    lm_users_v2: [{username:'admin',password:'admin',role:'admin',fullname:'Administrator'}],
+    checklists:  JSON.parse(JSON.stringify(DEFAULT_CHECKLISTS)),
+    loginHistory:[],
+    settings:    {maintenanceMode:false}
+  };
+
+  localStorage.setItem(LOCAL_KEY, JSON.stringify(_cloudCache));
+  if (_cloudSyncEnabled) {
+    const ok = await cloudWrite(_cloudCache);
+    if (ok) { showToast('Cloud data erased successfully.', 'success'); showSyncStatus('online'); }
+    else    { showToast('Cloud erase failed. Wiped locally.', 'error'); showSyncStatus('error'); }
+  } else {
+    showToast('Data wiped locally (sync is OFF).', 'info');
+  }
+  renderAdminDashboard(); renderDataLog(); renderUsers(); renderLogins(); renderChecklistEditor();
+}
+
+// ══════════════════════════════════════════════════════════════════
+// ADMIN: CLOUD STORAGE GRAPH
+// ══════════════════════════════════════════════════════════════════
+function renderStorageGraph() {
+  if (!_cloudCache) return;
+  const LIMIT_KB   = 1048576;      // Firebase free tier limit (~1 GB in KB)
+  const dataStr    = JSON.stringify(_cloudCache);
+  const usedBytes  = new Blob([dataStr]).size;
+  const usedKB     = usedBytes / 1024;
+
+  // Breakdown by section
+  const sections = [
+    { label: 'Jobs',         key: 'lm_log_v2',    color: '#f59e0b' },
+    { label: 'Users',        key: 'lm_users_v2',  color: '#3b82f6' },
+    { label: 'Checklists',   key: 'checklists',   color: '#8b5cf6' },
+    { label: 'Login History',key: 'loginHistory', color: '#0d9488' },
+    { label: 'Settings',     key: 'settings',     color: '#6b7280' },
+  ];
+  const breakdown = sections.map(s => {
+    const kb = new Blob([JSON.stringify(_cloudCache[s.key] ?? '')]).size / 1024;
+    return { ...s, kb };
+  });
+  const freeKB = Math.max(0, LIMIT_KB - usedKB);
+  const pct    = Math.min(100, (usedKB / LIMIT_KB) * 100);
+
+  // Bar fill
+  const barFill  = document.getElementById('storage-bar-fill');
+  const pctLabel = document.getElementById('storage-pct-label');
+  const usedLbl  = document.getElementById('storage-used-label');
+  if (barFill)  barFill.style.width = `${pct.toFixed(1)}%`;
+  if (barFill)  barFill.style.background = pct > 80 ? 'linear-gradient(90deg,#ef4444,#f97316)' : pct > 50 ? 'linear-gradient(90deg,#f59e0b,#22c55e)' : 'linear-gradient(90deg,#0d9488,#22c55e)';
+  if (pctLabel) pctLabel.textContent = `${pct.toFixed(1)}%`;
+  if (usedLbl)  usedLbl.textContent  = `${usedKB.toFixed(2)} KB used`;
+
+  // Legend
+  const legend = document.getElementById('storage-legend');
+  if (legend) {
+    legend.innerHTML = [
+      ...breakdown.map(s => `
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="width:10px;height:10px;border-radius:50%;background:${s.color};flex-shrink:0;display:inline-block;"></span>
+          <span style="font-size:11px;color:var(--text-secondary);flex:1;">${s.label}</span>
+          <span style="font-size:11px;font-weight:700;font-family:var(--mono);color:var(--text-primary);">${s.kb.toFixed(2)} KB</span>
+        </div>`),
+      `<div style="display:flex;align-items:center;gap:8px;border-top:1px solid var(--border);padding-top:8px;margin-top:2px;">
+        <span style="width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);flex-shrink:0;display:inline-block;"></span>
+        <span style="font-size:11px;color:var(--text-muted);flex:1;">Free</span>
+        <span style="font-size:11px;font-weight:700;font-family:var(--mono);color:var(--text-muted);">${freeKB.toFixed(2)} KB</span>
+      </div>`
+    ].join('');
+  }
+
+  // Donut chart on canvas
+  const canvas = document.getElementById('storage-donut');
+  if (!canvas) return;
+  const ctx  = canvas.getContext('2d');
+  const cx   = canvas.width / 2, cy = canvas.height / 2, R = 54, r = 34;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  const slices = [...breakdown.map(s => ({ kb: s.kb, color: s.color })), { kb: freeKB, color: 'rgba(255,255,255,0.07)' }];
+  const total  = slices.reduce((a, s) => a + s.kb, 0) || 1;
+  let angle    = -Math.PI / 2;
+  slices.forEach(s => {
+    const sweep = (s.kb / total) * 2 * Math.PI;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, R, angle, angle + sweep);
+    ctx.closePath();
+    ctx.fillStyle = s.color;
+    ctx.fill();
+    angle += sweep;
+  });
+
+  // Donut hole
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, 2 * Math.PI);
+  ctx.fillStyle = '#131f2e';
+  ctx.fill();
+
+  // Center text
+  ctx.fillStyle = '#eef4fb';
+  ctx.font = 'bold 15px Inter, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(`${pct.toFixed(0)}%`, cx, cy - 7);
+  ctx.fillStyle = '#7d93ad';
+  ctx.font = '10px Inter, sans-serif';
+  ctx.fillText('used', cx, cy + 9);
+}
+
+
+window.addEventListener('DOMContentLoaded', () => {
+  // Hide session chip until login
+  const chip = document.getElementById('session-chip');
+  if (chip) chip.style.display = 'none';
+
+  // Initialise sync toggle UI
+  updateSyncToggleUI();
+
+  const btn     = document.getElementById('login-btn');
+  const btnText = document.getElementById('login-btn-text');
+  btn.style.pointerEvents = 'none';
+  btn.style.opacity       = '0.5';
+  btnText.textContent     = 'Connecting to cloud…';
+
+  initCloudSync().then(() => {
+    if (_cloudOnline) {
+      // Cloud is up — allow login
+      btn.style.pointerEvents = 'auto';
+      btn.style.opacity       = '1';
+      const labels = {area:'Sign in as Area Maint.',central:'Sign in as Central Mech.',admin:'Sign in as Admin'};
+      btnText.textContent = labels[selectedRole] ?? 'Sign in';
+    }
+    // If cloud failed, initCloudSync shows the blocked overlay; button stays disabled
+  });
+});
+</script>
+</body>
+</html>
